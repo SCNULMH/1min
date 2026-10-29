@@ -3,19 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>일민형 (1min)</title>
-<meta name="description" content="일민형(1min)은 한국어 어휘 학습 앱 ‘0개국어’를 만드는 1인 소프트웨어 회사입니다.">
-<meta property="og:title" content="일민형 (1min)">
-<meta property="og:description" content="한국어 어휘 학습 앱 ‘0개국어’를 만듭니다.">
+<title>일민형 (1min) — 포트폴리오 &amp; 회사 홈페이지</title>
+<meta name="description" content="일민형(1min)은 업무의 불편을 웹과 앱으로 해결하는 개발자 이민형의 1인 소프트웨어 회사이자 포트폴리오 사이트입니다.">
+<meta property="og:title" content="일민형 (1min) — 포트폴리오 &amp; 회사 홈페이지">
+<meta property="og:description" content="직접 기획·개발한 앱 출시 이력과 프로젝트 포트폴리오.">
 <meta property="og:type" content="website">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 @font-face {
-  font-family: 'Gwangyang Touching';
-  src: url(assets/gwangyang-touching.woff2') format('woff2');
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 400;
   font-display: swap;
+  src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Gwangyang Touching';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('assets/gwangyang-touching.woff2') format('woff2');
 }
 :root {
   --paper: #efe5cf;
@@ -26,8 +42,8 @@
   --rule: #cbbd9f;
   --seal: #b3382b;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --display: 'Gwangyang Touching', 'Nanum Myeongjo', serif;
   --body: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-gwangyang: 'Gwangyang Touching', serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -54,7 +70,7 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--paper);
@@ -71,79 +87,194 @@ a:focus-visible { outline: 2px solid var(--seal); outline-offset: 3px; }
 .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
 @media (min-width: 720px) { .wrap { padding: 0 32px; } }
 
-/* 머리 */
-.top { border-bottom: 1px solid var(--rule); }
-.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
-.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; }
-.brand b { font: 26px/1 var(--display); font-weight: 400; font-synthesis: none; }
+/* 머리 (상단 바 및 번호 목차) */
+.top { border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--paper); z-index: 10; }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.brand { display: flex; align-items: baseline; gap: 8px; text-decoration: none; }
+.brand b { font: 600 22px/1 var(--body); }
 .brand span { color: var(--ink-3); font-size: 14px; }
-nav { display: flex; gap: 4px; }
-nav a { text-decoration: none; color: var(--ink-2); font-size: 15px; padding: 10px 8px; min-height: 44px; display: inline-flex; align-items: center; }
+nav { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+nav a { text-decoration: none; color: var(--ink-2); font-size: 14px; padding: 6px 4px; min-height: 36px; display: inline-flex; align-items: center; gap: 4px; }
+nav a .nav-no { color: var(--seal); font-size: 13px; font-variant-numeric: tabular-nums; }
 @media (hover: hover) { nav a:hover { color: var(--ink); } }
-@media (max-width: 420px) { nav a:nth-child(1) { display: none; } }
 
-/* 첫 화면 */
-.lead { padding: 72px 0 56px; border-bottom: 1px solid var(--rule); }
+/* 소개 영역 (01 #intro) */
+.lead { padding: 64px 0 48px; border-bottom: 1px solid var(--rule); }
 .lead h1 {
-  font: clamp(34px, 6.4vw, 60px)/1.25 var(--display);
-  font-weight: 400; font-synthesis: none;
-  margin: 0 0 24px; max-width: 14em;
+  font: 600 clamp(26px, 5vw, 40px)/1.3 var(--body);
+  margin: 0 0 20px;
 }
 .lead h1 em { font-style: normal; color: var(--seal); }
-.lead p { margin: 0; max-width: 34em; color: var(--ink-2); font-size: 17px; }
+.lead .lead-desc { margin: 0 0 24px; color: var(--ink-2); font-size: 17px; line-height: 1.75; max-width: 48em; }
 
-/* 절 */
+.intro-en {
+  margin-top: 28px;
+  padding: 20px 24px;
+  background: var(--paper-2);
+  border-left: 3px solid var(--rule);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.intro-en p { margin: 0 0 10px; }
+.intro-en p:last-child { margin-bottom: 0; }
+.intro-en strong { color: var(--ink); }
+
+/* 섹션 공통 및 앵커 스크롤 오프셋 (고정 헤더 가림 방지) */
+:target,
+.lead,
+section {
+  scroll-margin-top: 80px;
+}
+@media (max-width: 680px) {
+  :target,
+  .lead,
+  section {
+    scroll-margin-top: 112px;
+  }
+}
+@media (max-width: 520px) {
+  :target,
+  .lead,
+  section {
+    scroll-margin-top: 152px;
+  }
+}
 section { padding: 56px 0; border-bottom: 1px solid var(--rule); }
-.sec-head { display: grid; grid-template-columns: 3em 1fr; align-items: baseline; margin-bottom: 28px; }
-.sec-head .no { color: var(--seal); font-size: 15px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
-.sec-head h2 { margin: 0; font: 28px/1.3 var(--display); font-weight: 400; font-synthesis: none; }
-.body { padding-left: 3em; }
+.sec-head { display: grid; grid-template-columns: 2.8em 1fr; align-items: baseline; margin-bottom: 28px; }
+.sec-head .no { color: var(--seal); font-size: 15px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 600; }
+.sec-head h2 { margin: 0; font: 600 24px/1.3 var(--body); }
+.body { padding-left: 2.8em; }
 @media (max-width: 560px) { .body { padding-left: 0; } }
 
-/* 앱 */
-.app { display: grid; gap: 40px; }
-@media (min-width: 820px) { .app { grid-template-columns: 1fr 1fr; align-items: start; } }
-.app-name { display: flex; align-items: center; gap: 14px; margin: 0 0 12px; }
-.app-name img { width: 56px; height: 56px; }
-.app-name strong { font: 30px/1.2 var(--display); font-weight: 400; font-synthesis: none; }
-.app-name small { display: block; color: var(--ink-3); font-size: 14px; }
-.app p { margin: 0 0 20px; }
-ol.points { list-style: none; margin: 0 0 28px; padding: 0; border-top: 1px solid var(--rule); }
-ol.points li { display: grid; grid-template-columns: 2.4em 1fr; padding: 12px 0; border-bottom: 1px solid var(--rule); }
-ol.points li::before { content: attr(data-n); color: var(--seal); font-family: var(--display); }
-.links { display: flex; flex-wrap: wrap; gap: 12px; }
+/* 앱 섹션 (02 #app) */
+.app-block { margin-bottom: 48px; }
+.app-block:last-child { margin-bottom: 0; }
+.app-block + .app-block { padding-top: 48px; border-top: 1px solid var(--rule); }
+
+.app-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.app-name { display: flex; align-items: center; gap: 14px; margin: 0; }
+.app-name img { width: 52px; height: 52px; display: block; }
+.app-name strong { font-size: 24px; line-height: 1.2; font-weight: 600; }
+.app-name strong.font-gwangyang { font-family: var(--font-gwangyang); font-size: 28px; font-weight: 400; }
+.app-name small { display: block; color: var(--ink-3); font-size: 14px; margin-top: 2px; }
+
+.badge {
+  display: inline-flex; align-items: center; padding: 3px 10px;
+  font-size: 13px; font-weight: 600; border: 1px solid var(--rule);
+  color: var(--ink-2); background: var(--paper-2);
+}
+.badge.live { border-color: var(--seal); color: var(--seal); }
+
+.app-grid { display: grid; gap: 32px; }
+@media (min-width: 820px) { .app-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+.app-grid.wide-shots { grid-template-columns: 1fr; }
+@media (min-width: 820px) { .app-grid.wide-shots { grid-template-columns: 1.1fr 0.9fr; } }
+
+.app-desc-text { margin: 0 0 16px; font-size: 15.5px; }
+.app-role { margin: 0 0 20px; padding: 12px 16px; background: var(--paper-2); font-size: 14.5px; color: var(--ink-2); }
+.app-role strong { color: var(--ink); }
+
+ol.points { list-style: none; margin: 0 0 24px; padding: 0; border-top: 1px solid var(--rule); }
+ol.points li { display: grid; grid-template-columns: 2em 1fr; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 14.5px; }
+ol.points li::before { content: attr(data-n); color: var(--seal); font-weight: 600; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 .btn {
-  display: inline-flex; align-items: center; min-height: 48px; padding: 0 20px;
-  border: 1px solid var(--ink); text-decoration: none; font-weight: 600;
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+  border: 1px solid var(--ink); text-decoration: none; font-size: 14.5px; font-weight: 600;
   transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), color 160ms var(--ease-out);
 }
 .btn.main { background: var(--ink); color: var(--paper); }
-.btn:active { transform: scale(0.97); }
+.btn:active { transform: scale(0.98); }
 @media (hover: hover) {
   .btn:hover { background: var(--seal); border-color: var(--seal); color: var(--paper); }
 }
-.note { color: var(--ink-3); font-size: 14px; margin-top: 14px; }
-.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; }
+
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0; }
+.shots.shots-2 { grid-template-columns: repeat(2, 1fr); }
 .shots figure { margin: 0; }
 .shots img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); background: var(--paper-2); }
-.shots figcaption { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+.shots figcaption { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; text-align: center; }
 
-/* 회사 정보 */
-dl.info { margin: 0; display: grid; grid-template-columns: 8em 1fr; border-top: 1px solid var(--rule); }
-dl.info dt, dl.info dd { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--rule); }
-dl.info dt { color: var(--ink-3); }
+/* 프로젝트 섹션 (03 #projects) */
+.project-list { display: grid; gap: 24px; }
+.project-card {
+  padding: 20px 24px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.project-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+}
+.project-head h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.project-head .tag { font-size: 13px; color: var(--ink-3); }
+
+.project-details { display: grid; gap: 8px; font-size: 14.5px; }
+.detail-row { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; }
+@media (max-width: 440px) { .detail-row { grid-template-columns: 1fr; gap: 2px; } }
+.detail-label { color: var(--ink-3); font-weight: 600; }
+.detail-value { color: var(--ink); }
+
+.project-link { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--rule); font-size: 14px; }
+
+/* 경력 섹션 (04 #experience) */
+.exp-list { display: grid; gap: 20px; }
+.exp-item {
+  padding: 18px 22px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.exp-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--rule);
+  padding-bottom: 8px;
+}
+.exp-header h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.exp-header .period { font-size: 13px; color: var(--ink-3); }
+.exp-item ul { margin: 0; padding-left: 18px; font-size: 14.5px; color: var(--ink-2); }
+.exp-item li { margin-bottom: 6px; }
+.exp-item li:last-child { margin-bottom: 0; }
+
+/* 기술 스택 섹션 (05 #skills) */
+.skills-grid {
+  display: grid; gap: 12px;
+  border-top: 1px solid var(--rule);
+}
+.skill-row {
+  display: grid; grid-template-columns: 8em 1fr;
+  padding: 12px 0; border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+}
+@media (max-width: 480px) { .skill-row { grid-template-columns: 1fr; gap: 4px; } }
+.skill-cat { font-weight: 600; color: var(--ink-3); }
+.skill-items { color: var(--ink); }
+
+/* 회사 정보 섹션 (06 #company) */
+dl.info { margin: 0; display: grid; grid-template-columns: 8.5em 1fr; border-top: 1px solid var(--rule); }
+dl.info dt, dl.info dd { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+dl.info dt { color: var(--ink-3); font-weight: 600; }
 @media (max-width: 420px) { dl.info { grid-template-columns: 7.6em 1fr; } }
 
-.en p { margin: 0 0 14px; max-width: 40em; color: var(--ink-2); }
-.en p:first-child { color: var(--ink); }
+/* 연락 섹션 (07 #contact) */
+.contact-box {
+  padding: 24px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.contact-box p { margin: 0 0 10px; font-size: 15px; color: var(--ink-2); }
+.contact-mail { font-size: 22px; font-weight: 600; color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); }
+.contact-mail:hover { text-decoration-color: var(--seal); color: var(--seal); }
 
-footer { padding: 36px 0 56px; color: var(--ink-3); font-size: 14px; }
-footer ul { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 20px; }
-footer a { display: inline-flex; min-height: 44px; align-items: center; }
+/* 바닥글 */
+footer { padding: 40px 0 56px; color: var(--ink-3); font-size: 13.5px; line-height: 1.6; }
+footer ul { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+footer a { display: inline-flex; min-height: 36px; align-items: center; }
 footer p { margin: 0 0 6px; }
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
+  * { transition: none !important; scroll-behavior: auto !important; }
 }
 </style>
 </head>
@@ -153,57 +284,291 @@ footer p { margin: 0 0 6px; }
   <div class="wrap">
     <a class="brand" href="./" aria-label="일민형 처음으로"><b>일민형</b><span>1min</span></a>
     <nav aria-label="주 메뉴">
-      <a href="#app">앱</a>
-      <a href="#company">회사</a>
-      <a href="#contact">연락</a>
+      <a href="#intro"><span class="nav-no">01</span>소개</a>
+      <a href="#app"><span class="nav-no">02</span>만든 앱</a>
+      <a href="#projects"><span class="nav-no">03</span>프로젝트</a>
+      <a href="#experience"><span class="nav-no">04</span>경력</a>
+      <a href="#skills"><span class="nav-no">05</span>기술</a>
+      <a href="#company"><span class="nav-no">06</span>회사</a>
+      <a href="#contact"><span class="nav-no">07</span>연락</a>
     </nav>
   </div>
 </header>
 
 <main>
-  <div class="lead">
+  <!-- 01 소개 -->
+  <section id="intro" class="lead" aria-labelledby="intro-title">
     <div class="wrap">
-      <h1>말뜻을 몰라 생기는 오해를 <em>줄이는</em> 앱을 만듭니다</h1>
-      <p>일민형(1min)은 전라남도 나주에 있는 1인 소프트웨어 회사입니다. 한국어 어휘 학습 앱 ‘0개국어’를 직접 기획하고 개발해 Google Play와 토스 앱인토스에서 서비스하고 있습니다.</p>
-    </div>
-  </div>
+      <div class="sec-head"><span class="no">01</span><h2 id="intro-title">소개</h2></div>
+      <div class="body">
+        <h1>업무의 불편을 웹과 앱으로 해결하는 개발자 <em>이민형</em>입니다</h1>
+        <p class="lead-desc">일민형(1min)을 설립해 직접 기획·개발한 앱을 출시하고, 개인 프로젝트의 서버 구성과 배포까지 경험하고 있습니다. 작은 아이디어를 끝까지 파고들어 실제로 동작하는 완성도 높은 서비스로 구현하는 과정을 지향합니다.</p>
 
-  <section id="app" aria-labelledby="app-title">
-    <div class="wrap">
-      <div class="sec-head"><span class="no">01</span><h2 id="app-title">만드는 앱</h2></div>
-      <div class="body app">
-        <div>
-          <p class="app-name">
-            <picture>
-              <source srcset="assets/symbol-color-dark.svg" media="(prefers-color-scheme: dark)">
-              <img src="assets/symbol-color.svg" alt="" width="56" height="56">
-            </picture>
-            <span><strong>0개국어</strong><small>대화에서 바로 꺼내 쓰는 어휘 단어장</small></span>
-          </p>
-          <p>문해력 저하와 신조어 때문에 뜻을 몰라 생기는 오해를 줄이려고 만든 앱입니다. 청소년부터 어른까지, 평소 말투를 더 정확한 말로 바꿔 쓰는 연습을 합니다.</p>
-          <ol class="points">
-            <li data-n="1">하루 새 단어 10개 — ‘평소 말투 → 이 단어로’ 예문을 짝지어 익힙니다.</li>
-            <li data-n="2">오해하기 쉬운 말, 요즘 말을 표준 표현으로 바꾸는 카드.</li>
-            <li data-n="3">4지선다 퀴즈와 간격 반복 복습(0·1·3·7·16·35일).</li>
-            <li data-n="4">회원가입 없이 모든 기능을 쓸 수 있고, 기록은 기기에 저장됩니다.</li>
-          </ol>
-          <div class="links">
-            <a class="btn main" href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual" rel="noopener">Google Play에서 받기</a>
-          </div>
-          <p class="note">토스 앱에서는 앱인토스에서 ‘0개국어’를 찾으면 바로 쓸 수 있습니다.</p>
-        </div>
-        <div class="shots">
-          <figure><img src="assets/today.webp" alt="오늘의 단어 화면" width="540" height="960" loading="lazy"><figcaption>오늘의 단어</figcaption></figure>
-          <figure><img src="assets/card.webp" alt="단어 카드 화면" width="540" height="960" loading="lazy"><figcaption>단어 카드</figcaption></figure>
-          <figure><img src="assets/quiz.webp" alt="퀴즈 화면" width="540" height="960" loading="lazy"><figcaption>퀴즈</figcaption></figure>
+        <div id="en" class="intro-en" lang="en">
+          <p><strong>Lee Min-hyung</strong> is a software developer and founder of <strong>1min</strong>, a one-person software company based in Naju, South Korea (established in October 2026).</p>
+          <p>Designing, developing, and deploying real-world software products, including <em>0gaeguk-eo (Zerolingual)</em> (live on Google Play and Apps-in-Toss) and <em>Newbie Helper</em> (in preparation for Google Play and Apps-in-Toss).</p>
+          <p class="en-contact">Inquiries: <a href="mailto:2min@1min.dev">2min@1min.dev</a></p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- 02 만든 앱 -->
+  <section id="app" aria-labelledby="app-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">02</span><h2 id="app-title">만든 앱</h2></div>
+      <div class="body">
+
+        <!-- 0개국어 -->
+        <article class="app-block">
+          <div class="app-meta">
+            <p class="app-name">
+              <picture>
+                <source srcset="assets/symbol-color-dark.svg" media="(prefers-color-scheme: dark)">
+                <img src="assets/symbol-color.svg" alt="" width="52" height="52">
+              </picture>
+              <span><strong class="font-gwangyang">0개국어</strong><small>대화에서 바로 꺼내 쓰는 어휘 단어장</small></span>
+            </p>
+            <span class="badge live">Google Play · 앱인토스 출시</span>
+          </div>
+
+          <div class="app-grid">
+            <div>
+              <p class="app-desc-text">일상 표현을 정확한 어휘로 바꾸고 퀴즈와 간격 반복으로 복습하는 한국어 어휘 학습 앱입니다. 문해력 저하나 신조어 때문에 생기는 의사소통 오해를 줄이기 위해 개발했습니다.</p>
+
+              <div class="app-role">
+                <p style="margin:0 0 4px"><strong>맡은 일:</strong> 서비스 기획, 학습 흐름 및 화면 개발, 간격 반복 복습 알고리즘 구현, Android 패키징 및 스토어 정식 출시.</p>
+                <p style="margin:0"><strong>기술:</strong> React, TypeScript, Capacitor</p>
+              </div>
+
+              <ol class="points">
+                <li data-n="1">하루 새 단어 10개 — ‘평소 말투 → 이 단어로’ 실생활 예문 매칭 학습.</li>
+                <li data-n="2">오해하기 쉬운 말과 신조어를 표준 표현으로 정리하는 플래시 카드.</li>
+                <li data-n="3">4지선다 퀴즈 및 에빙하우스 간격 반복 복습(0·1·3·7·16·35일 주기).</li>
+                <li data-n="4">회원가입 없이 즉시 사용 가능하며 모든 학습 기록은 기기에 로컬 저장.</li>
+              </ol>
+
+              <div class="links">
+                <a class="btn main" href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual" target="_blank" rel="noopener">Google Play에서 보기</a>
+                <a class="btn" href="intoss://zerolanguage">앱인토스에서 열기</a>
+              </div>
+            </div>
+            <div class="shots">
+              <figure><img src="assets/today.webp" alt="오늘의 단어 화면" width="540" height="960" loading="lazy"><figcaption>오늘의 단어</figcaption></figure>
+              <figure><img src="assets/card.webp" alt="단어 카드 화면" width="540" height="960" loading="lazy"><figcaption>단어 카드</figcaption></figure>
+              <figure><img src="assets/quiz.webp" alt="퀴즈 화면" width="540" height="960" loading="lazy"><figcaption>퀴즈</figcaption></figure>
+            </div>
+          </div>
+        </article>
+
+        <!-- 신입 이사원 -->
+        <article class="app-block">
+          <div class="app-meta">
+            <p class="app-name">
+              <span><strong>신입 이사원</strong><small>업무 적응과 일상 관리를 돕는 사내 도우미 앱</small></span>
+            </p>
+            <span class="badge">출시 준비 중 — Google Play · 앱인토스</span>
+          </div>
+
+          <div class="app-grid wide-shots">
+            <div>
+              <p class="app-desc-text">할 일·식단·모임·조직도·자리 정보를 한곳에서 관리하며 신입 사원의 빠른 적응과 일상적인 사내 생활 정리를 돕는 모바일 앱입니다.</p>
+
+              <div class="app-role">
+                <p style="margin:0 0 4px"><strong>맡은 일:</strong> 화면 및 전역 상태 관리 구현, 주간 식단 OCR 인식 연동, Supabase 데이터베이스 및 사용자 인증 연동, 스토어 등록 심사 자료 준비.</p>
+                <p style="margin:0"><strong>기술:</strong> Expo, React Native, TypeScript, Zustand, Supabase · PostgreSQL</p>
+              </div>
+
+              <ol class="points">
+                <li data-n="1">오늘의 할 일, 구내식당 식단, 사내 모임, 조직도 및 자리 배치 통합 조회.</li>
+                <li data-n="2">식단표 사진 업로드 시 OCR 텍스트 추출을 통한 일자별 메뉴 자동 분류.</li>
+                <li data-n="3">Supabase 기반 계정 인증 및 클라우드 동기화로 팀원 간 데이터 공유.</li>
+              </ol>
+
+              <div class="links">
+                <a class="btn" href="newbie-helper/privacy.html">개인정보처리방침</a>
+                <a class="btn" href="newbie-helper/account-deletion.html">계정 삭제 안내</a>
+              </div>
+            </div>
+            <div class="shots shots-2">
+              <figure><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 화면" width="675" height="1200" loading="lazy"><figcaption>홈 대시보드 (예시 데이터 화면)</figcaption></figure>
+              <figure><img src="assets/newbie-life.webp" alt="신입 이사원 생활 및 식단 화면" width="675" height="1200" loading="lazy"><figcaption>생활 및 식단 (예시 데이터 화면)</figcaption></figure>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 그 밖의 프로젝트 -->
+  <section id="projects" aria-labelledby="projects-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">03</span><h2 id="projects-title">그 밖의 프로젝트</h2></div>
+      <div class="body">
+        <div class="project-list">
+
+<!-- 클덱스 -->
+          <article class="project-card">
+            <div class="project-head">
+              <h3>클덱스 (Cldex)</h3>
+              <span class="tag">개인 개발 도구</span>
+            </div>
+            <div class="project-details">
+              <div class="detail-row">
+                <span class="detail-label">문제</span>
+                <span class="detail-value">AI 개발 요청의 계획·구현 단계와 실행 상태를 관리하기 어렵다.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">한 일</span>
+                <span class="detail-value">작업 카드, 단계별 CLI 실행, 실행 기록과 사용량 확인 흐름을 구현했다.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">기술</span>
+                <span class="detail-value">TypeScript, Node.js, 웹 UI, Claude · Codex CLI</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">결과</span>
+                <span class="detail-value">사용량 소진 감지와 대체 실행 흐름의 로컬 검증 기록이 있다.</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- 이디그디 -->
+          <article class="project-card">
+            <div class="project-head">
+              <h3>이디그디</h3>
+              <span class="tag">이미지 기반 제주 여행 추천</span>
+            </div>
+            <div class="project-details">
+              <div class="detail-row">
+                <span class="detail-label">문제</span>
+                <span class="detail-value">마음에 드는 풍경과 닮은 제주 여행지를 찾기 어렵다.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">한 일</span>
+                <span class="detail-value">이미지 유사도 검색, 추천 이유, 여행 코스와 지도 연결을 구현했다.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">기술</span>
+                <span class="detail-value">Python, FastAPI, CLIP, AWS EC2, Docker, Nginx</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">결과</span>
+                <span class="detail-value">이미지 검색과 코스 생성 기능 및 HTTPS 배포·롤백 구성 기록이 있다.</span>
+              </div>
+            </div>
+            <div class="project-link">
+              <a href="https://bw-jeju.duckdns.org" target="_blank" rel="noopener">bw-jeju.duckdns.org 서비스 둘러보기 →</a>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 경력 요약 -->
+  <section id="experience" aria-labelledby="experience-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">04</span><h2 id="experience-title">경력 요약</h2></div>
+      <div class="body">
+        <div class="exp-list">
+
+          <article class="exp-item">
+            <div class="exp-header">
+              <h3>일민형 (1min) — 대표 / 소프트웨어 개발</h3>
+              <span class="period">2026.10 ~ 현재</span>
+            </div>
+            <ul>
+              <li>1인 소프트웨어 개발사 설립 및 사업자 등록 (응용 소프트웨어 개발 및 공급)</li>
+              <li>한국어 어휘 학습 앱 ‘0개국어’ 기획·개발 및 Google Play, 토스 앱인토스 정식 출시</li>
+              <li>사내 도우미 앱 ‘신입 이사원’ 기획·개발 및 스토어 심사 준비 (Google Play, 토스 앱인토스)</li>
+              <li>회사 홈페이지 및 자체 호스팅 기반 웹 서비스 구축·운영</li>
+            </ul>
+          </article>
+
+          <article class="exp-item">
+            <div class="exp-header">
+              <h3>(주)아이티맨</h3>
+              <span class="period">2025.06.16 ~ 재직 중</span>
+            </div>
+            <div class="exp-subitem">
+              <h4 style="margin: 0 0 8px; font-size: 15.5px; font-weight: 600; color: var(--ink);">발전소 정비관리시스템 기능 개선</h4>
+              <ul>
+                <li>발전운영 및 유지관리 업무 지원, 발전실적·연료관리·일일집계 기능의 입력 및 집계 기준 개선</li>
+                <li>Nexacro XFDL 화면, Java 서버 API, Mapper XML 및 조회 쿼리 연계 최적화</li>
+                <li>안전작업허가서 결재 권한·실결재자 표시·출력 조회 보완 및 예방점검 검색 조건 개선</li>
+              </ul>
+            </div>
+            <div class="exp-subitem" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--rule);">
+              <h4 style="margin: 0 0 8px; font-size: 15.5px; font-weight: 600; color: var(--ink);">웹 교육 서비스 유지보수 및 보안 점검</h4>
+              <ul>
+                <li>Java/JSP 기반 교육 서비스 유지보수 및 학습 진도·인증 세션 관련 오류 대응</li>
+                <li>웹 애플리케이션 취약점 점검 결과 분석, 소스코드 보안 보완 조치 및 보안 개발 가이드라인 작성</li>
+                <li>관련 MOOC 서비스 보안 수정 범위 분리 및 Apache 운영 절차·TLS 점검 결과 문서화</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="exp-item">
+            <div class="exp-header">
+              <h3>(주)에이스퀘어 — 현장실습생</h3>
+              <span class="period">2023.12 ~ 2024.01</span>
+            </div>
+          </article>
+
+        </div>
+
+        <div style="margin-top: 36px;">
+          <h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--rule); padding-bottom: 8px;">교육</h3>
+          <div class="exp-list">
+            <article class="exp-item">
+              <div class="exp-header">
+                <h3>스마트인재개발원 — DCX 개발자 과정</h3>
+                <span class="period">2024.10.07 ~ 2025.04.04</span>
+              </div>
+              <ul>
+                <li>Java·Python 기반 풀스택 웹 서비스 및 데이터 처리 개발 교육 과정 수료</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 기술 스택 -->
+  <section id="skills" aria-labelledby="skills-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">05</span><h2 id="skills-title">기술 스택</h2></div>
+      <div class="body">
+        <div class="skills-grid">
+          <div class="skill-row">
+            <span class="skill-cat">언어</span>
+            <span class="skill-items">Java, Python, JavaScript, TypeScript, SQL</span>
+          </div>
+          <div class="skill-row">
+            <span class="skill-cat">웹 · 앱</span>
+            <span class="skill-items">React, React Native · Expo, Capacitor, Nexacro</span>
+          </div>
+          <div class="skill-row">
+            <span class="skill-cat">서버 · 데이터</span>
+            <span class="skill-items">FastAPI, Java · JSP, Supabase · PostgreSQL</span>
+          </div>
+          <div class="skill-row">
+            <span class="skill-cat">배포 · 도구</span>
+            <span class="skill-items">AWS EC2, Docker, Nginx, Apache, Git · GitHub</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 회사 정보 -->
   <section id="company" aria-labelledby="company-title">
     <div class="wrap">
-      <div class="sec-head"><span class="no">02</span><h2 id="company-title">회사 정보</h2></div>
+      <div class="sec-head"><span class="no">06</span><h2 id="company-title">회사 정보</h2></div>
       <div class="body">
         <dl class="info">
           <dt>상호</dt><dd>일민형 (1min)</dd>
@@ -217,23 +582,15 @@ footer p { margin: 0 0 6px; }
     </div>
   </section>
 
-  <section id="en" aria-labelledby="en-title" lang="en">
-    <div class="wrap">
-      <div class="sec-head"><span class="no">03</span><h2 id="en-title">In English</h2></div>
-      <div class="body en">
-        <p><strong>1min</strong> is a one-person software company based in Naju, South Korea, founded in October 2026.</p>
-        <p>We build <strong>0gaeguk-eo (Zerolingual)</strong>, a Korean vocabulary app that helps teens and adults understand and use precise words, commonly misread expressions and new slang. The app is live on Google Play and on Toss Apps-in-Toss.</p>
-        <p>Contact: <a href="mailto:hello@1min.dev">hello@1min.dev</a></p>
-      </div>
-    </div>
-  </section>
-
+  <!-- 07 연락 -->
   <section id="contact" aria-labelledby="contact-title">
     <div class="wrap">
-      <div class="sec-head"><span class="no">04</span><h2 id="contact-title">연락</h2></div>
+      <div class="sec-head"><span class="no">07</span><h2 id="contact-title">연락</h2></div>
       <div class="body">
-        <p style="margin:0 0 8px">앱 문의, 제휴 제안, 오류 제보는 메일로 보내 주세요.</p>
-        <p style="margin:0"><a href="mailto:hello@1min.dev" style="font-size:20px">hello@1min.dev</a></p>
+        <div class="contact-box">
+          <p>프로젝트 협업, 개발 외주, 앱 관련 문의나 제안은 이메일로 편하게 보내 주세요.</p>
+          <p style="margin:0"><a class="contact-mail" href="mailto:2min@1min.dev">2min@1min.dev</a></p>
+        </div>
       </div>
     </div>
   </section>
@@ -242,13 +599,14 @@ footer p { margin: 0 0 6px; }
 <footer>
   <div class="wrap">
     <ul>
-      <li><a href="https://iris-lizard-031.notion.site/0-3fe266b5e4618014abb1e118430018f3" rel="noopener">0개국어 개인정보처리방침</a></li>
-      <li><a href="https://iris-lizard-031.notion.site/0-3ff266b5e46180af9f7feb9971331e49" rel="noopener">0개국어 계정·데이터 삭제 안내</a></li>
+      <li><a href="https://iris-lizard-031.notion.site/0-3fe266b5e4618014abb1e118430018f3" target="_blank" rel="noopener">0개국어 개인정보처리방침</a></li>
+      <li><a href="https://iris-lizard-031.notion.site/0-3ff266b5e46180af9f7feb9971331e49" target="_blank" rel="noopener">0개국어 계정·데이터 삭제 안내</a></li>
       <li><a href="newbie-helper/privacy.html">신입 이사원 개인정보처리방침</a></li>
       <li><a href="newbie-helper/account-deletion.html">신입 이사원 계정 삭제 안내</a></li>
     </ul>
-    <p>제목 글꼴: 광양시가 2022년 작성하여 공공누리 제1유형으로 개방한 ‘광양감동체(작성자: 광양시)’를 이용하였습니다.</p>
-    <p>© 2026 일민형 (1min)</p>
+    <p>본문 및 제목 글꼴: <a href="https://github.com/orioncactus/pretendard" target="_blank" rel="noopener">Pretendard</a> (SIL Open Font License 1.1, Kil Hyung-jin / orioncactus) 자체 호스팅</p>
+    <p>0개국어 표제 글꼴: 광양시가 2022년 작성하여 공공누리 제1유형으로 개방한 ‘광양감동체(작성자: 광양시)’를 이용하였습니다.</p>
+    <p>© 2026 일민형 (1min). All rights reserved.</p>
   </div>
 </footer>
 
