@@ -80,9 +80,9 @@ COMPANY_INFO_ITEMS = [
 ]
 
 EXPECTED_SECTIONS = [
-    "intro",
-    "app",
-    "projects",
+    "hero",
+    "featured-works",
+    "other-projects",
     "experience",
     "skills",
     "company",
@@ -97,18 +97,23 @@ class SiteHTMLParser(HTMLParser):
         self.nav_links = []
         self.local_links = []
         self.image_srcs = []
+        self.anchors = []
+        self.sections = []
         self.in_nav = False
 
     def handle_starttag(self, tag, attrs):
         attrs_dict = dict(attrs)
         if "id" in attrs_dict:
             self.ids.append((tag, attrs_dict["id"]))
+            if tag == "section":
+                self.sections.append(attrs_dict["id"])
 
         if tag == "nav":
             self.in_nav = True
 
         if tag == "a" and "href" in attrs_dict:
             href = attrs_dict["href"]
+            self.anchors.append((href, attrs_dict))
             if self.in_nav and href.startswith("#"):
                 self.nav_links.append(href[1:])
             elif not href.startswith(("http://", "https://", "mailto:", "#", "intoss:")):
@@ -130,6 +135,65 @@ def calculate_sha256(file_path: Path) -> str:
         while chunk := f.read(8192):
             sha.update(chunk)
     return sha.hexdigest().lower()
+
+
+def validate_redesign_markup(html_content: str) -> list[str]:
+    """Check the public-content contract independently of visual styling."""
+    parser = SiteHTMLParser()
+    parser.feed(html_content)
+    errors = []
+    if parser.sections[:7] != EXPECTED_SECTIONS:
+        errors.append(f"섹션 순서: {parser.sections[:7]}")
+
+    ids = [value for _, value in parser.ids]
+    for required in ("work-zerolingual", "work-newbie", "work-idigdi", "en"):
+        if required not in ids:
+            errors.append(f"앵커 누락: {required}")
+    work_positions = [ids.index(work) for work in ("work-zerolingual", "work-newbie", "work-idigdi") if work in ids]
+    if len(work_positions) == 3 and work_positions != sorted(work_positions):
+        errors.append("대표 작업 순서")
+
+    hero = re.search(r'<section\b[^>]*\bid=["\']hero["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
+    hero_html = hero.group(1) if hero else ""
+    hero_text = re.sub(r"<[^>]+>", "", hero_html)
+    for phrase in (
+        "업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.",
+        "0개국어 Google Play 출시",
+        "이디그디 공개 서비스 운영",
+        "일민형 설립",
+    ):
+        if phrase not in re.sub(r"\s+", " ", hero_text):
+            errors.append(f"히어로 문구 누락: {phrase}")
+    for label, href in (("대표 작업 보기", "#featured-works"), ("문의하기", "mailto:2min@1min.dev")):
+        if not re.search(r'<a\b(?=[^>]*\bhref=["\']' + re.escape(href) + r'["\'])[^>]*>\s*' + label + r'\s*</a>', hero_html, re.S):
+            errors.append(f"히어로 CTA 누락: {label}")
+
+    hrefs = {href for href, _ in parser.anchors}
+    for href in (
+        "https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual",
+        "intoss://zerolanguage",
+        "https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb",
+        "https://bw-jeju.duckdns.org",
+        "mailto:2min@1min.dev",
+        "#en",
+    ):
+        if href not in hrefs:
+            errors.append(f"필수 링크 누락: {href}")
+    if "출시 준비 중" not in html_content:
+        errors.append("신입 이사원 상태 누락")
+    idigdi_article = re.search(r'<article\b[^>]*\bid=["\']work-idigdi["\'][^>]*>(.*?)</article>', html_content, re.S | re.I)
+    idigdi_html = idigdi_article.group(1) if idigdi_article else ""
+    for shot in ("idigdi-main", "idigdi-results", "idigdi-route", "idigdi-mobile"):
+        if f"assets/{shot}.webp" not in idigdi_html:
+            errors.append(f"이디그디 캡처 노출 누락: {shot}")
+    if "클덱스" not in html_content:
+        errors.append("클덱스 누락")
+    if not re.search(r"@media\s*\(prefers-reduced-motion:\s*reduce\)", html_content):
+        errors.append("모션 감소 CSS 누락")
+    for term in ("Polishing", "발전실적", "연료관리", "일일집계", "작업허가서", "실결재자", "MOOC", "롤백 스크립트", "테스트 포트", "발전소", "고객사"):
+        if term in html_content:
+            errors.append(f"금지 문구: {term}")
+    return errors
 
 
 def run_static_checks() -> tuple[int, int]:
@@ -166,6 +230,14 @@ def run_static_checks() -> tuple[int, int]:
     parser = SiteHTMLParser()
     parser.feed(html_content)
 
+    redesign_errors = validate_redesign_markup(html_content)
+    if redesign_errors:
+        print(f"❌ [실패] 랜딩 구성/필수 콘텐츠: {redesign_errors}")
+        failed += 1
+    else:
+        print("✅ [통과] 히어로·대표 작업·필수 링크·캡처·금지 문구 확인")
+        passed += 1
+
     # 섹션 순서 및 ID 중복 검사
     id_list = [id_val for _, id_val in parser.ids]
     id_counts = {id_val: id_list.count(id_val) for id_val in id_list}
@@ -177,24 +249,13 @@ def run_static_checks() -> tuple[int, int]:
         print("✅ [통과] HTML 내 ID 중복 없음")
         passed += 1
 
-    # 기대 섹션 ID 존재 및 순서 확인
-    found_section_indices = []
-    missing_sections = []
-    for sec in EXPECTED_SECTIONS:
-        if sec in id_list:
-            found_section_indices.append(id_list.index(sec))
-        else:
-            missing_sections.append(sec)
-
-    if missing_sections:
-        print(f"❌ [실패] 필수 섹션 누락: {missing_sections}")
-        failed += 1
-    elif found_section_indices != sorted(found_section_indices):
-        print(f"❌ [실패] 섹션 순서 불일치: 기대순서={EXPECTED_SECTIONS}")
-        failed += 1
-    else:
+    # 최상위 7개 섹션 순서 확인
+    if parser.sections[:7] == EXPECTED_SECTIONS:
         print(f"✅ [통과] 7개 섹션 순서 일치: {EXPECTED_SECTIONS}")
         passed += 1
+    else:
+        print(f"❌ [실패] 섹션 순서 불일치: 기대={EXPECTED_SECTIONS}, 실제={parser.sections[:7]}")
+        failed += 1
 
     # 목차 nav 링크와 섹션 ID 연결 확인
     nav_missing = [n for n in parser.nav_links if n not in id_list]
@@ -266,6 +327,10 @@ def run_static_checks() -> tuple[int, int]:
     css_urls = re.findall(r"url\(['\"]?([^'\")]+)['\"]?\)", html_content)
     for u in css_urls:
         referenced_files.add(u)
+    for css_file in (WORKSPACE_DIR / "assets").glob("*.css"):
+        if css_file.name in html_content or f"assets/{css_file.name}" in html_content:
+            for u in re.findall(r"url\(['\"]?([^'\")]+)['\"]?\)", css_file.read_text(encoding="utf-8")):
+                referenced_files.add(str((css_file.parent / u).relative_to(WORKSPACE_DIR)).replace("\\", "/"))
 
     missing_files = []
     for f in referenced_files:
@@ -351,7 +416,7 @@ def run_static_checks() -> tuple[int, int]:
         passed += 1
 
     # 12. 0개국어 앱인토스 출시 링크 및 배지 검사
-    if "intoss://zerolanguage" in html_content and "Google Play · 앱인토스 출시" in html_content:
+    if "intoss://zerolanguage" in html_content and "Google Play" in html_content and "앱인토스" in html_content:
         print("✅ [통과] 0개국어 앱인토스 출시 링크(intoss://zerolanguage) 및 배지 확인")
         passed += 1
     else:
@@ -368,16 +433,14 @@ def run_static_checks() -> tuple[int, int]:
 
     # 14. 확정 경력 및 교육 항목 검사 (사용자 제공 2026-10-29 기준)
     career_errors = []
-    if "(주)아이티맨" not in html_content or "2025.06.16 ~ 재직 중" not in html_content:
-        career_errors.append("(주)아이티맨 재직 기간(2025.06.16 ~ 재직 중) 누락")
+    if "(주)아이티맨" not in html_content or not re.search(r"2025\.06\.16\s*[~∼]\s*(현재|재직 중)", html_content):
+        career_errors.append("(주)아이티맨 재직 기간 누락")
     if "(주)아이티맨 — " in html_content:
         career_errors.append("아이티맨 직급 표기 발견(비워 두어야 함)")
-    if "(주)에이스퀘어 — 현장실습생" not in html_content or "2023.12 ~ 2024.01" not in html_content:
+    if "(주)에이스퀘어" not in html_content or "현장실습생" not in html_content or not re.search(r"2023\.12\s*[~∼]\s*2024\.01", html_content):
         career_errors.append("(주)에이스퀘어 현장실습생(2023.12 ~ 2024.01) 누락")
-    if "스마트인재개발원 — DCX 개발자 과정" not in html_content or "2024.10.07 ~ 2025.04.04" not in html_content:
+    if "스마트인재개발원" not in html_content or "DCX 개발자 과정" not in html_content or not re.search(r"2024\.10\.07\s*[~∼]\s*2025\.04\.04", html_content):
         career_errors.append("스마트인재개발원 교육 과정(2024.10.07 ~ 2025.04.04) 누락")
-    if "교육</h3>" not in html_content:
-        career_errors.append("교육 항목 분리 표기 누락")
 
     if career_errors:
         print(f"❌ [실패] 확정 경력/교육 요건 불일치: {career_errors}")
@@ -430,7 +493,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
             passed += 1
 
         # 3. Playwright 실행
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
 
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -511,7 +574,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                     page.click(f"nav a[href='{href}']")
                     page.wait_for_timeout(80)
                     pos = page.evaluate(f"""(() => {{
-                        const header = document.querySelector('.top');
+                        const header = document.querySelector('header');
                         const header_bottom = header ? header.getBoundingClientRect().bottom : 0;
                         const el = document.getElementById('{href[1:]}');
                         if (!el) return null;
@@ -575,7 +638,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         failed += 1
 
                     gwangyang_elem_font = page.evaluate(
-                        "getComputedStyle(document.querySelector('.font-gwangyang')).fontFamily"
+                        "(() => { const el = document.querySelector('#work-zerolingual .font-gwangyang'); return el ? getComputedStyle(el).fontFamily : ''; })()"
                     )
                     other_gwangyang_elements = page.evaluate("""(() => {
                         const all = document.querySelectorAll('body *:not(.font-gwangyang):not(.font-gwangyang *)');
@@ -610,6 +673,100 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                     else:
                         print(f"❌ [실패] 키보드 포커스 오류 (focus1={first_focus}, focus2={second_focus})")
                         failed += 1
+
+                    focus_style = page.evaluate("""(() => {
+                        const el = document.activeElement;
+                        const s = getComputedStyle(el);
+                        return {width: parseFloat(s.outlineWidth), style: s.outlineStyle, offset: parseFloat(s.outlineOffset)};
+                    })()""")
+                    if focus_style["width"] >= 2 and focus_style["style"] != "none" and focus_style["offset"] >= 3:
+                        print("✅ [통과] 키보드 포커스 링 표시 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 키보드 포커스 링 미흡: {focus_style}")
+                        failed += 1
+
+                    copy_button = page.locator('#contact button').first
+                    if copy_button.count():
+                        copy_button.click()
+                        try:
+                            page.locator('#copy-status').filter(has_text=re.compile(r"복사했|복사하지 못했")).wait_for(timeout=5000)
+                            print("✅ [통과] 이메일 복사 결과 접근성 알림 확인")
+                            passed += 1
+                        except PlaywrightTimeoutError:
+                            print("❌ [실패] 이메일 복사 결과 접근성 알림 누락")
+                            failed += 1
+                    else:
+                        print("❌ [실패] 이메일 복사 버튼 누락")
+                        failed += 1
+
+                if tc["width"] in (1280, 390):
+                    # A preceding click can leave the button hovered during its 140ms color transition.
+                    page.wait_for_timeout(160)
+                    contrast_issues = page.evaluate("""(() => {
+                        const parse = value => {
+                            const m = value.match(/[\\d.]+/g);
+                            return m ? m.slice(0, 4).map(Number) : null;
+                        };
+                        const luminance = rgb => {
+                            const c = rgb.slice(0, 3).map(v => {
+                                v /= 255;
+                                return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+                            });
+                            return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+                        };
+                        const issues = [];
+                        for (const el of document.querySelectorAll('p, h1, h2, h3, a, button, li, dt, dd')) {
+                            if (!el.textContent.trim() || !el.getClientRects().length) continue;
+                            const fg = parse(getComputedStyle(el).color);
+                            let bg = null;
+                            for (let node = el; node && !bg; node = node.parentElement) {
+                                const c = parse(getComputedStyle(node).backgroundColor);
+                                if (c && (c.length < 4 || c[3] >= .99)) bg = c;
+                            }
+                            if (!bg) bg = parse(getComputedStyle(document.body).backgroundColor);
+                            if (!fg || !bg) continue;
+                            const a = luminance(fg), b = luminance(bg);
+                            const ratio = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+                            if (ratio < 4.5) issues.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}: ${ratio.toFixed(2)}`);
+                        }
+                        return issues.slice(0, 15);
+                    })()""")
+                    if contrast_issues:
+                        print(f"❌ [실패] [{tc['name']}] 텍스트 대비 4.5:1 미만: {contrast_issues}")
+                        failed += 1
+                    else:
+                        print(f"✅ [통과] [{tc['name']}] 본문·버튼·링크 대비 4.5:1 이상")
+                        passed += 1
+
+                    page.emulate_media(reduced_motion="reduce")
+                    reduced = page.evaluate("""(() => {
+                        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+                        const el = document.querySelector('a');
+                        const s = getComputedStyle(el);
+                        return parseFloat(s.transitionDuration) <= .001 && getComputedStyle(document.documentElement).scrollBehavior === 'auto';
+                    })()""")
+                    if reduced:
+                        print(f"✅ [통과] [{tc['name']}] 모션 감소 설정 반영")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] [{tc['name']}] 모션 감소 설정 미반영")
+                        failed += 1
+                    page.emulate_media(reduced_motion="no-preference")
+
+                if tc["width"] == 390:
+                    small_targets = page.evaluate("""(() => [...document.querySelectorAll('a, button')]
+                        .filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
+                        .map(el => ({name: el.textContent.trim().slice(0, 24) || el.getAttribute('aria-label') || el.tagName,
+                                     width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height}))
+                        .filter(el => el.width < 44 || el.height < 44)
+                        .slice(0, 15))()""")
+                    if small_targets:
+                        print(f"❌ [실패] [{tc['name']}] 44×44px 미만 터치 영역: {small_targets}")
+                        failed += 1
+                    else:
+                        print(f"✅ [통과] [{tc['name']}] 링크·버튼 44×44px 이상")
+                        passed += 1
 
                 # [REWORK 1] 미리보기 캡처 직전 부드러운 스크롤 끄고 맨 위로 복귀 및 위치 안정화
                 if tc["shot"]:

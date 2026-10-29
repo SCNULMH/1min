@@ -9,7 +9,43 @@ from unittest.mock import MagicMock
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE_DIR / "scripts"))
 
-from verify_site import TeeLogger
+from verify_site import TeeLogger, validate_redesign_markup
+
+
+VALID_LANDING = """
+<section id="hero"><h1>업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.</h1>
+<p>0개국어 Google Play 출시</p><p>이디그디 공개 서비스 운영</p><p>일민형 설립</p>
+<a href="#featured-works">대표 작업 보기</a><a href="mailto:2min@1min.dev">문의하기</a></section>
+<section id="featured-works"><article id="work-zerolingual"></article>
+<article id="work-newbie">출시 준비 중</article><article id="work-idigdi">
+<img src="assets/idigdi-main.webp"><img src="assets/idigdi-results.webp">
+<img src="assets/idigdi-route.webp"><img src="assets/idigdi-mobile.webp"></article></section>
+<section id="other-projects">클덱스</section><section id="experience"></section>
+<section id="skills"></section><section id="company"></section><section id="contact"></section>
+<footer><div id="en"></div><a href="#en">English</a></footer>
+<a href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual">Play</a>
+<a href="intoss://zerolanguage">Toss</a>
+<a href="https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb">Newbie</a>
+<a href="https://bw-jeju.duckdns.org">Idigdi</a>
+<style>@media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms; } }</style>
+"""
+
+
+class TestRedesignMarkup(unittest.TestCase):
+    def test_complete_landing_contract(self):
+        self.assertEqual(validate_redesign_markup(VALID_LANDING), [])
+
+    def test_missing_hero_cta_and_capture(self):
+        broken = VALID_LANDING.replace('href="#featured-works"', 'href="#skills"').replace('assets/idigdi-route.webp', 'assets/missing.webp')
+        errors = validate_redesign_markup(broken)
+        self.assertTrue(any("히어로 CTA" in error for error in errors))
+        self.assertTrue(any("이디그디 캡처" in error for error in errors))
+
+    def test_wrong_order_and_forbidden_copy(self):
+        broken = VALID_LANDING.replace('<section id="other-projects">클덱스</section><section id="experience"></section>', '<section id="experience"></section><section id="other-projects">클덱스 롤백 스크립트</section>')
+        errors = validate_redesign_markup(broken)
+        self.assertTrue(any("섹션 순서" in error for error in errors))
+        self.assertTrue(any("금지 문구" in error for error in errors))
 
 
 class TestTeeLogger(unittest.TestCase):
