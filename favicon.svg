@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><title>0개국어</title><g transform="translate(-12.42 -18.63) scale(1.097)">
+  
+  <!-- 16~32px 용: 챙을 두껍게, 0 의 획과 틈을 키움 -->
+  <path fill="#1c1a16" d="M96 90 L100 44 Q101 32 113 32 H143 Q155 32 156 44 L160 90 Z"/>
+  <path fill="#1c1a16" d="M16 96 Q128 76 240 96 Q128 114 16 96 Z"/>
+  <path fill="#b3382b" fill-rule="evenodd" d="M128 122c-30 0-48 24-48 52s18 52 48 52 48-24 48-52-18-52-48-52z
+    M128 148c-11 0-17 12-17 26s6 26 17 26 17-12 17-26-6-26-17-26z"/>
+</g></svg>

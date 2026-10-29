@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>일민형 (1min)</title>
+<meta name="description" content="일민형(1min)은 한국어 어휘 학습 앱 ‘0개국어’를 만드는 1인 소프트웨어 회사입니다.">
+<meta property="og:title" content="일민형 (1min)">
+<meta property="og:description" content="한국어 어휘 학습 앱 ‘0개국어’를 만듭니다.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+@font-face {
+  font-family: 'Gwangyang Touching';
+  src: url(assets/gwangyang-touching.woff2') format('woff2');
+  font-display: swap;
+}
+:root {
+  --paper: #efe5cf;
+  --paper-2: #e6dbc2;
+  --ink: #1c1a16;
+  --ink-2: #554e42;
+  --ink-3: #6b6355;
+  --rule: #cbbd9f;
+  --seal: #b3382b;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --display: 'Gwangyang Touching', 'Nanum Myeongjo', serif;
+  --body: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #14130f;
+    --paper-2: #1d1b16;
+    --ink: #ece5d6;
+    --ink-2: #b4ac9c;
+    --ink-3: #958d7e;
+    --rule: #37332b;
+    --seal: #e0644f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --paper: #14130f;
+  --paper-2: #1d1b16;
+  --ink: #ece5d6;
+  --ink-2: #b4ac9c;
+  --ink-3: #958d7e;
+  --rule: #37332b;
+  --seal: #e0644f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.7 var(--body);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--rule); }
+a:focus-visible { outline: 2px solid var(--seal); outline-offset: 3px; }
+@media (hover: hover) {
+  a:hover { text-decoration-color: var(--seal); }
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 720px) { .wrap { padding: 0 32px; } }
+
+/* 머리 */
+.top { border-bottom: 1px solid var(--rule); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; }
+.brand b { font: 26px/1 var(--display); font-weight: 400; font-synthesis: none; }
+.brand span { color: var(--ink-3); font-size: 14px; }
+nav { display: flex; gap: 4px; }
+nav a { text-decoration: none; color: var(--ink-2); font-size: 15px; padding: 10px 8px; min-height: 44px; display: inline-flex; align-items: center; }
+@media (hover: hover) { nav a:hover { color: var(--ink); } }
+@media (max-width: 420px) { nav a:nth-child(1) { display: none; } }
+
+/* 첫 화면 */
+.lead { padding: 72px 0 56px; border-bottom: 1px solid var(--rule); }
+.lead h1 {
+  font: clamp(34px, 6.4vw, 60px)/1.25 var(--display);
+  font-weight: 400; font-synthesis: none;
+  margin: 0 0 24px; max-width: 14em;
+}
+.lead h1 em { font-style: normal; color: var(--seal); }
+.lead p { margin: 0; max-width: 34em; color: var(--ink-2); font-size: 17px; }
+
+/* 절 */
+section { padding: 56px 0; border-bottom: 1px solid var(--rule); }
+.sec-head { display: grid; grid-template-columns: 3em 1fr; align-items: baseline; margin-bottom: 28px; }
+.sec-head .no { color: var(--seal); font-size: 15px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.sec-head h2 { margin: 0; font: 28px/1.3 var(--display); font-weight: 400; font-synthesis: none; }
+.body { padding-left: 3em; }
+@media (max-width: 560px) { .body { padding-left: 0; } }
+
+/* 앱 */
+.app { display: grid; gap: 40px; }
+@media (min-width: 820px) { .app { grid-template-columns: 1fr 1fr; align-items: start; } }
+.app-name { display: flex; align-items: center; gap: 14px; margin: 0 0 12px; }
+.app-name img { width: 56px; height: 56px; }
+.app-name strong { font: 30px/1.2 var(--display); font-weight: 400; font-synthesis: none; }
+.app-name small { display: block; color: var(--ink-3); font-size: 14px; }
+.app p { margin: 0 0 20px; }
+ol.points { list-style: none; margin: 0 0 28px; padding: 0; border-top: 1px solid var(--rule); }
+ol.points li { display: grid; grid-template-columns: 2.4em 1fr; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+ol.points li::before { content: attr(data-n); color: var(--seal); font-family: var(--display); }
+.links { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; min-height: 48px; padding: 0 20px;
+  border: 1px solid var(--ink); text-decoration: none; font-weight: 600;
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.btn.main { background: var(--ink); color: var(--paper); }
+.btn:active { transform: scale(0.97); }
+@media (hover: hover) {
+  .btn:hover { background: var(--seal); border-color: var(--seal); color: var(--paper); }
+}
+.note { color: var(--ink-3); font-size: 14px; margin-top: 14px; }
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; }
+.shots figure { margin: 0; }
+.shots img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); background: var(--paper-2); }
+.shots figcaption { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+
+/* 회사 정보 */
+dl.info { margin: 0; display: grid; grid-template-columns: 8em 1fr; border-top: 1px solid var(--rule); }
+dl.info dt, dl.info dd { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+dl.info dt { color: var(--ink-3); }
+@media (max-width: 420px) { dl.info { grid-template-columns: 7.6em 1fr; } }
+
+.en p { margin: 0 0 14px; max-width: 40em; color: var(--ink-2); }
+.en p:first-child { color: var(--ink); }
+
+footer { padding: 36px 0 56px; color: var(--ink-3); font-size: 14px; }
+footer ul { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 20px; }
+footer a { display: inline-flex; min-height: 44px; align-items: center; }
+footer p { margin: 0 0 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="일민형 처음으로"><b>일민형</b><span>1min</span></a>
+    <nav aria-label="주 메뉴">
+      <a href="#app">앱</a>
+      <a href="#company">회사</a>
+      <a href="#contact">연락</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="lead">
+    <div class="wrap">
+      <h1>말뜻을 몰라 생기는 오해를 <em>줄이는</em> 앱을 만듭니다</h1>
+      <p>일민형(1min)은 전라남도 나주에 있는 1인 소프트웨어 회사입니다. 한국어 어휘 학습 앱 ‘0개국어’를 직접 기획하고 개발해 Google Play와 토스 앱인토스에서 서비스하고 있습니다.</p>
+    </div>
+  </div>
+
+  <section id="app" aria-labelledby="app-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">01</span><h2 id="app-title">만드는 앱</h2></div>
+      <div class="body app">
+        <div>
+          <p class="app-name">
+            <picture>
+              <source srcset="assets/symbol-color-dark.svg" media="(prefers-color-scheme: dark)">
+              <img src="assets/symbol-color.svg" alt="" width="56" height="56">
+            </picture>
+            <span><strong>0개국어</strong><small>대화에서 바로 꺼내 쓰는 어휘 단어장</small></span>
+          </p>
+          <p>문해력 저하와 신조어 때문에 뜻을 몰라 생기는 오해를 줄이려고 만든 앱입니다. 청소년부터 어른까지, 평소 말투를 더 정확한 말로 바꿔 쓰는 연습을 합니다.</p>
+          <ol class="points">
+            <li data-n="1">하루 새 단어 10개 — ‘평소 말투 → 이 단어로’ 예문을 짝지어 익힙니다.</li>
+            <li data-n="2">오해하기 쉬운 말, 요즘 말을 표준 표현으로 바꾸는 카드.</li>
+            <li data-n="3">4지선다 퀴즈와 간격 반복 복습(0·1·3·7·16·35일).</li>
+            <li data-n="4">회원가입 없이 모든 기능을 쓸 수 있고, 기록은 기기에 저장됩니다.</li>
+          </ol>
+          <div class="links">
+            <a class="btn main" href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual" rel="noopener">Google Play에서 받기</a>
+          </div>
+          <p class="note">토스 앱에서는 앱인토스에서 ‘0개국어’를 찾으면 바로 쓸 수 있습니다.</p>
+        </div>
+        <div class="shots">
+          <figure><img src="assets/today.webp" alt="오늘의 단어 화면" width="540" height="960" loading="lazy"><figcaption>오늘의 단어</figcaption></figure>
+          <figure><img src="assets/card.webp" alt="단어 카드 화면" width="540" height="960" loading="lazy"><figcaption>단어 카드</figcaption></figure>
+          <figure><img src="assets/quiz.webp" alt="퀴즈 화면" width="540" height="960" loading="lazy"><figcaption>퀴즈</figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="company" aria-labelledby="company-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">02</span><h2 id="company-title">회사 정보</h2></div>
+      <div class="body">
+        <dl class="info">
+          <dt>상호</dt><dd>일민형 (1min)</dd>
+          <dt>대표자</dt><dd>이민형</dd>
+          <dt>사업자등록번호</dt><dd>114-40-01468</dd>
+          <dt>업종</dt><dd>응용 소프트웨어 개발 및 공급</dd>
+          <dt>소재지</dt><dd>전라남도 나주시</dd>
+          <dt>설립</dt><dd>2026년 10월</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="en" aria-labelledby="en-title" lang="en">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">03</span><h2 id="en-title">In English</h2></div>
+      <div class="body en">
+        <p><strong>1min</strong> is a one-person software company based in Naju, South Korea, founded in October 2026.</p>
+        <p>We build <strong>0gaeguk-eo (Zerolingual)</strong>, a Korean vocabulary app that helps teens and adults understand and use precise words, commonly misread expressions and new slang. The app is live on Google Play and on Toss Apps-in-Toss.</p>
+        <p>Contact: <a href="mailto:hello@1min.dev">hello@1min.dev</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" aria-labelledby="contact-title">
+    <div class="wrap">
+      <div class="sec-head"><span class="no">04</span><h2 id="contact-title">연락</h2></div>
+      <div class="body">
+        <p style="margin:0 0 8px">앱 문의, 제휴 제안, 오류 제보는 메일로 보내 주세요.</p>
+        <p style="margin:0"><a href="mailto:hello@1min.dev" style="font-size:20px">hello@1min.dev</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <ul>
+      <li><a href="https://iris-lizard-031.notion.site/0-3fe266b5e4618014abb1e118430018f3" rel="noopener">0개국어 개인정보처리방침</a></li>
+      <li><a href="https://iris-lizard-031.notion.site/0-3ff266b5e46180af9f7feb9971331e49" rel="noopener">계정·데이터 삭제 안내</a></li>
+    </ul>
+    <p>제목 글꼴: 광양시가 2022년 작성하여 공공누리 제1유형으로 개방한 ‘광양감동체(작성자: 광양시)’를 이용하였습니다.</p>
+    <p>© 2026 일민형 (1min)</p>
+  </div>
+</footer>
+
+</body>
+</html>
