@@ -219,6 +219,54 @@ ol.points li::before { content: attr(data-n); color: var(--seal); font-weight: 6
 
 .project-link { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--rule); font-size: 14px; }
 
+/* 이디그디 서비스 카드 */
+.project-card.idigdi-card {
+  padding: 24px;
+}
+.idigdi-body {
+  display: grid;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+@media (min-width: 820px) {
+  .idigdi-body {
+    grid-template-columns: 1.35fr 0.65fr;
+    align-items: start;
+  }
+}
+.idigdi-mobile-col {
+  display: flex;
+  justify-content: center;
+}
+.idigdi-mobile-figure {
+  margin: 0;
+  max-width: 260px;
+  width: 100%;
+}
+.idigdi-mobile-figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.idigdi-mobile-figure figcaption {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  text-align: center;
+}
+.idigdi-desktop-gallery {
+  border-top: 1px solid var(--rule);
+  padding-top: 20px;
+}
+@media (max-width: 640px) {
+  .idigdi-desktop-gallery .shots {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 /* 경력 섹션 (04 #experience) */
 .exp-list { display: grid; gap: 20px; }
 .exp-item {
@@ -408,7 +456,64 @@ footer p { margin: 0 0 6px; }
       <div class="body">
         <div class="project-list">
 
-<!-- 클덱스 -->
+          <!-- 이디그디 -->
+          <article class="project-card idigdi-card">
+            <div class="project-head">
+              <div>
+                <h3 style="display:inline-block; margin-right:8px;">이디그디</h3>
+                <span class="tag">사진으로 찾는 닮은 제주 여행지</span>
+              </div>
+              <span class="badge live">웹 서비스 운영 중</span>
+            </div>
+
+            <div class="idigdi-body">
+              <div>
+                <p class="app-desc-text">일상 풍경이나 여행 사진을 올리면 CLIP 인덱스 기반으로 닮은 제주 명소를 찾고, 관광지·맛집 중심의 여행 코스와 카카오맵 길찾기를 연결하는 여행 추천 웹 서비스입니다.</p>
+
+                <div class="app-role">
+                  <p style="margin:0 0 4px"><strong>맡은 일:</strong> FastAPI 기반 유사도 검색 및 추천 API 개발, 제주 관광사진 4,229장 CLIP 벡터 인덱싱, AWS EC2·Docker·Nginx 배포 및 테스트 포트 검증·롤백 스크립트 작성, 모바일 상세 화면과 다일 코스 링크 구현.</p>
+                  <p style="margin:0"><strong>기술:</strong> Python, FastAPI, PyTorch · CLIP, Docker, Nginx, AWS EC2, Supabase(PostgreSQL), Kakao Local API, TourAPI</p>
+                </div>
+
+                <ol class="points">
+                  <li data-n="1">제주 관광사진 4,229장을 CLIP(ViT-B-32) 512차원 벡터로 인덱싱해 사진 유사도 명소 검색 구현.</li>
+                  <li data-n="2">업로드 이미지를 서버 디스크에 저장하지 않고 메모리에서 즉시 특징 벡터를 추출·분석.</li>
+                  <li data-n="3">여행 월·동행·이동 수단·필수 방문지(최대 3곳) 조건을 반영한 반일~3일 코스 생성.</li>
+                  <li data-n="4">AWS EC2에 Docker·Nginx로 HTTPS 공개 운영, 테스트 포트 검증 후 롤백 가능한 배포 구성.</li>
+                </ol>
+
+                <div class="links">
+                  <a class="btn main" href="https://bw-jeju.duckdns.org" target="_blank" rel="noopener">bw-jeju.duckdns.org 서비스 둘러보기 →</a>
+                </div>
+              </div>
+
+              <div class="idigdi-mobile-col">
+                <figure class="idigdi-mobile-figure">
+                  <img src="assets/idigdi-mobile.webp" alt="이디그디 모바일 화면 — 추천 결과 및 모바일 상세 안내" width="555" height="1200" loading="lazy">
+                  <figcaption>모바일 상세 화면</figcaption>
+                </figure>
+              </div>
+            </div>
+
+            <div class="idigdi-desktop-gallery">
+              <div class="shots">
+                <figure>
+                  <img src="assets/idigdi-main.webp" alt="이디그디 데스크톱 메인 화면 — 사진 업로드 및 조건 선택" width="1200" height="750" loading="lazy">
+                  <figcaption>메인 화면 (사진 업로드 및 조건 선택)</figcaption>
+                </figure>
+                <figure>
+                  <img src="assets/idigdi-results.webp" alt="이디그디 추천 결과 화면 — 닮은 제주 명소 및 추천 사유" width="1200" height="750" loading="lazy">
+                  <figcaption>추천 결과 (사진 출처: 한국관광공사 관광사진 갤러리)</figcaption>
+                </figure>
+                <figure>
+                  <img src="assets/idigdi-route.webp" alt="이디그디 여행 코스 화면 — 일차별 일정 및 지도 연결" width="1200" height="750" loading="lazy">
+                  <figcaption>여행 코스 (장소 데이터: TourAPI)</figcaption>
+                </figure>
+              </div>
+            </div>
+          </article>
+
+          <!-- 클덱스 -->
           <article class="project-card">
             <div class="project-head">
               <h3>클덱스 (Cldex)</h3>
@@ -431,35 +536,6 @@ footer p { margin: 0 0 6px; }
                 <span class="detail-label">결과</span>
                 <span class="detail-value">사용량 소진 감지와 대체 실행 흐름의 로컬 검증 기록이 있다.</span>
               </div>
-            </div>
-          </article>
-
-          <!-- 이디그디 -->
-          <article class="project-card">
-            <div class="project-head">
-              <h3>이디그디</h3>
-              <span class="tag">이미지 기반 제주 여행 추천</span>
-            </div>
-            <div class="project-details">
-              <div class="detail-row">
-                <span class="detail-label">문제</span>
-                <span class="detail-value">마음에 드는 풍경과 닮은 제주 여행지를 찾기 어렵다.</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">한 일</span>
-                <span class="detail-value">이미지 유사도 검색, 추천 이유, 여행 코스와 지도 연결을 구현했다.</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">기술</span>
-                <span class="detail-value">Python, FastAPI, CLIP, AWS EC2, Docker, Nginx</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">결과</span>
-                <span class="detail-value">이미지 검색과 코스 생성 기능 및 HTTPS 배포·롤백 구성 기록이 있다.</span>
-              </div>
-            </div>
-            <div class="project-link">
-              <a href="https://bw-jeju.duckdns.org" target="_blank" rel="noopener">bw-jeju.duckdns.org 서비스 둘러보기 →</a>
             </div>
           </article>
 

@@ -47,35 +47,22 @@ VERIFY_LOG_FILE = PWTMP_DIR / "verify-log.txt"
 class TeeLogger:
     def __init__(self, filename, stream):
         self.stream = stream
-        self.file = None
-        try:
-            self.file = open(filename, "w", encoding="utf-8")
-        except Exception as e:
-            self.stream.write(f"⚠️ [알림] 로그 파일 오픈 실패({filename}): {e}. 콘솔 출력만 유지합니다.\n")
+        self.file = open(filename, "w", encoding="utf-8")
 
     def write(self, message):
         self.stream.write(message)
         if self.file and not self.file.closed:
-            try:
-                self.file.write(message)
-                self.file.flush()
-            except Exception:
-                pass
+            self.file.write(message)
+            self.file.flush()
 
     def flush(self):
         self.stream.flush()
         if self.file and not self.file.closed:
-            try:
-                self.file.flush()
-            except Exception:
-                pass
+            self.file.flush()
 
     def close(self):
         if self.file and not self.file.closed:
-            try:
-                self.file.close()
-            except Exception:
-                pass
+            self.file.close()
 
 # 보호 문서 기준 SHA-256 해시
 PROTECTED_HASHES = {
@@ -296,9 +283,16 @@ def run_static_checks() -> tuple[int, int]:
         passed += 1
 
     # 8. 새 캡처 WebP 이미지 규격 검사
-    newbie_shots = ["assets/newbie-home.webp", "assets/newbie-life.webp"]
+    target_shots = [
+        "assets/newbie-home.webp",
+        "assets/newbie-life.webp",
+        "assets/idigdi-main.webp",
+        "assets/idigdi-results.webp",
+        "assets/idigdi-route.webp",
+        "assets/idigdi-mobile.webp",
+    ]
     shot_errors = []
-    for shot_rel in newbie_shots:
+    for shot_rel in target_shots:
         sp = WORKSPACE_DIR / shot_rel
         if not sp.is_file():
             shot_errors.append(f"{shot_rel} 파일 누락")
@@ -671,8 +665,20 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
 def main():
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
-    tee_out = TeeLogger(VERIFY_LOG_FILE, orig_stdout)
-    tee_err = TeeLogger(PWTMP_DIR / "verify-err.txt", orig_stderr)
+    tee_out = None
+    tee_err = None
+    try:
+        tee_out = TeeLogger(VERIFY_LOG_FILE, orig_stdout)
+        tee_err = TeeLogger(PWTMP_DIR / "verify-err.txt", orig_stderr)
+    except Exception as e:
+        if tee_out:
+            try:
+                tee_out.close()
+            except Exception:
+                pass
+        orig_stderr.write(f"❌ [치명적 오류] 로그 파일 초기화 실패: {e}\n")
+        sys.exit(1)
+
     sys.stdout = tee_out
     sys.stderr = tee_err
 
@@ -711,10 +717,14 @@ def main():
     finally:
         sys.stdout = orig_stdout
         sys.stderr = orig_stderr
-        tee_out.flush()
-        tee_out.close()
-        tee_err.flush()
-        tee_err.close()
+        try:
+            if tee_out:
+                tee_out.flush()
+                tee_out.close()
+        finally:
+            if tee_err:
+                tee_err.flush()
+                tee_err.close()
 
     if total_failed > 0:
         sys.exit(1)
