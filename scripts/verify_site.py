@@ -19,8 +19,24 @@ from PIL import Image
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 
 # Playwright 및 임시 파일용 디렉터리 설정 (권한 문제 방지)
-PWTMP_DIR = Path(r"C:\Users\user\build-tmp\pwtmp")
-PWTMP_DIR.mkdir(parents=True, exist_ok=True)
+def _resolve_temp_dir() -> Path:
+    candidates = [
+        Path(r"C:\Users\user\build-tmp\pwtmp"),
+        WORKSPACE_DIR / ".pwtmp",
+        Path(os.environ.get("TEMP", ".")) / "pwtmp",
+    ]
+    for d in candidates:
+        try:
+            d.mkdir(parents=True, exist_ok=True)
+            test_file = d / ".write_test"
+            test_file.write_text("ok", encoding="utf-8")
+            test_file.unlink(missing_ok=True)
+            return d
+        except Exception:
+            continue
+    return WORKSPACE_DIR
+
+PWTMP_DIR = _resolve_temp_dir()
 os.environ["TEMP"] = str(PWTMP_DIR)
 os.environ["TMP"] = str(PWTMP_DIR)
 
@@ -30,21 +46,36 @@ VERIFY_LOG_FILE = PWTMP_DIR / "verify-log.txt"
 
 class TeeLogger:
     def __init__(self, filename, stream):
-        self.file = open(filename, "w", encoding="utf-8")
         self.stream = stream
+        self.file = None
+        try:
+            self.file = open(filename, "w", encoding="utf-8")
+        except Exception as e:
+            self.stream.write(f"⚠️ [알림] 로그 파일 오픈 실패({filename}): {e}. 콘솔 출력만 유지합니다.\n")
 
     def write(self, message):
         self.stream.write(message)
-        self.file.write(message)
-        self.file.flush()
+        if self.file and not self.file.closed:
+            try:
+                self.file.write(message)
+                self.file.flush()
+            except Exception:
+                pass
 
     def flush(self):
         self.stream.flush()
-        self.file.flush()
+        if self.file and not self.file.closed:
+            try:
+                self.file.flush()
+            except Exception:
+                pass
 
     def close(self):
-        if not self.file.closed:
-            self.file.close()
+        if self.file and not self.file.closed:
+            try:
+                self.file.close()
+            except Exception:
+                pass
 
 # 보호 문서 기준 SHA-256 해시
 PROTECTED_HASHES = {
@@ -233,6 +264,9 @@ def run_static_checks() -> tuple[int, int]:
         forbidden_issues.append("비공개 노션 링크(notion.so) 발견")
     if "작업 확인 시점" in html_content:
         forbidden_issues.append("제거 대상 '작업 확인 시점' 표기 발견")
+    for kw in ["발전실적", "연료관리", "일일집계", "작업허가서", "실결재자", "MOOC"]:
+        if kw in html_content:
+            forbidden_issues.append(f"고객사 내부 업무 세부 키워드({kw}) 발견")
     if forbidden_issues:
         print(f"❌ [실패] 금지 정보 검출: {forbidden_issues}")
         failed += 1
