@@ -95,6 +95,23 @@ DRAFT_FORBIDDEN_TERMS = (
     "확정 전",
 )
 
+TURNSTILE_PUBLIC_SITEKEY = "0x4AAAAAAFsvfCbrajidkTlI"
+TURNSTILE_SITEKEY_PATTERN = r"(?:TURNSTILE_SITE_KEY|0x[0-9A-Za-z_-]{10,})"
+TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js"
+ALLOWED_EXTERNAL_ORIGIN = "https://challenges.cloudflare.com"
+
+
+def is_allowed_external_request(url: str, base_url: str) -> bool:
+    """Allow local test server, data: URIs, and HTTPS challenges.cloudflare.com requests only."""
+    normalized_base = base_url.rstrip("/")
+    if normalized_base and (url == normalized_base or url.startswith(normalized_base + "/")):
+        return True
+    if url.startswith("data:"):
+        return True
+    if url == ALLOWED_EXTERNAL_ORIGIN or url.startswith(ALLOWED_EXTERNAL_ORIGIN + "/"):
+        return True
+    return False
+
 
 class SiteHTMLParser(HTMLParser):
     def __init__(self):
@@ -352,8 +369,11 @@ def validate_redesign_markup(html_content: str) -> list[str]:
     if not re.search(r'<input\b(?=[^>]*\bname=["\']startedAt["\'])(?=[^>]*\btype=["\']hidden["\'])[^>]*>', form_html):
         errors.append("startedAt 필드 누락")
 
-    if not re.search(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bcf-turnstile\b[^"\']*["\'])(?=[^>]*\bdata-sitekey=["\']TURNSTILE_SITE_KEY["\'])[^>]*>', form_html):
-        errors.append("Turnstile 위젯 또는 자리표시 data-sitekey 누락")
+    if not re.search(
+        rf'<div\b(?=[^>]*\bclass=["\'][^"\']*\bcf-turnstile\b[^"\']*["\'])(?=[^>]*\bdata-sitekey=["\']{TURNSTILE_SITEKEY_PATTERN}["\'])[^>]*>',
+        form_html,
+    ):
+        errors.append("Turnstile 위젯 또는 유효한 data-sitekey 누락")
 
     if (
         "https://challenges.cloudflare.com/turnstile/v0/api.js" not in html_content
@@ -491,6 +511,19 @@ def run_static_checks() -> tuple[int, int]:
     else:
         print("✅ [통과] 히어로·대표 작업·필수 링크·캡처·금지 문구 확인")
         passed += 1
+
+    # Turnstile 실제 공개 사이트 키 적용 확인
+    if re.search(
+        r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bcf-turnstile\b[^"\']*["\'])(?=[^>]*\bdata-sitekey=["\']'
+        + re.escape(TURNSTILE_PUBLIC_SITEKEY)
+        + r'["\'])[^>]*>',
+        html_content,
+    ):
+        print(f"✅ [통과] Turnstile 공개 사이트 키({TURNSTILE_PUBLIC_SITEKEY}) 적용 확인")
+        passed += 1
+    else:
+        print(f"❌ [실패] index.html에 Turnstile 공개 사이트 키({TURNSTILE_PUBLIC_SITEKEY})가 적용되지 않음")
+        failed += 1
 
     # 섹션 순서 및 ID 중복 검사
     id_list = [id_val for _, id_val in parser.ids]
@@ -803,13 +836,24 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                 console_errors = []
                 asset_404s = []
                 external_requests = []
+                turnstile_requests = []
+
+                def handle_turnstile_route(route):
+                    turnstile_requests.append(route.request.url)
+                    route.fulfill(
+                        status=200,
+                        content_type="application/javascript; charset=utf-8",
+                        body="",
+                    )
+
+                page.route("https://challenges.cloudflare.com/**", handle_turnstile_route)
 
                 page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
                 page.on("response", lambda res: asset_404s.append(res.url) if res.status >= 400 else None)
                 page.on(
                     "request",
                     lambda req: external_requests.append(req.url)
-                    if not req.url.startswith(base_url) and not req.url.startswith("data:")
+                    if not is_allowed_external_request(req.url, base_url)
                     else None,
                 )
 
@@ -945,8 +989,17 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         print(f"❌ [실패] 광양감동체 적용 대상 오류: 표제={gwangyang_elem_font}, 누출요소={other_gwangyang_elements}")
                         failed += 1
 
+                    expected_focus_order = (
+                        "#contact .contact-mail",
+                        "button#copy-email",
+                        '#contact .collection-note a[href="privacy.html"]',
+                        "input#contact-email",
+                        "textarea#contact-message",
+                        "input#contact-consent",
+                        "button#contact-submit",
+                    )
                     focus_steps = []
-                    for expected in ("#contact .contact-mail", "button#copy-email"):
+                    for expected in expected_focus_order:
                         page.keyboard.press("Tab")
                         focus_steps.append(page.evaluate("""(expected) => {
                             const el = document.activeElement;
@@ -955,20 +1008,21 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                                 expected,
                                 actual: el.tagName + (el.id ? '#' + el.id : '') + (el.className ? '.' + String(el.className).trim().replaceAll(' ', '.') : ''),
                                 matches: el === document.querySelector(expected),
+                                isHoneypot: Boolean(el && el.id === 'contact-website'),
                                 width: parseFloat(s.outlineWidth),
                                 style: s.outlineStyle,
                                 offset: parseFloat(s.outlineOffset)
                             };
                         }""", expected))
-                    if all(step["matches"] for step in focus_steps):
-                        print("✅ [통과] 연락 링크 → 주소 복사 버튼 Tab 포커스 순서 확인")
+                    if all(step["matches"] and not step["isHoneypot"] for step in focus_steps):
+                        print("✅ [통과] 연락처·개인정보처리방침·양식 입력·동의·제출 버튼 Tab 포커스 순서(허니팟 건너뜀) 확인")
                         passed += 1
                     else:
                         print(f"❌ [실패] 키보드 포커스 순서 오류: {focus_steps}")
                         failed += 1
 
                     if all(step["width"] >= 2 and step["style"] != "none" and step["offset"] >= 3 for step in focus_steps):
-                        print("✅ [통과] 연락 링크와 복사 버튼의 키보드 포커스 링 확인")
+                        print("✅ [통과] 연락처 및 노출된 문의 양식 요소의 키보드 포커스 링 확인")
                         passed += 1
                     else:
                         print(f"❌ [실패] 키보드 포커스 링 미흡: {focus_steps}")
@@ -988,49 +1042,112 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         print("❌ [실패] 이메일 복사 버튼 누락")
                         failed += 1
 
-                    contact_state = page.evaluate("""(() => {
+                    contact_state = page.evaluate("""(expectedSiteKey) => {
                         const contact = document.getElementById('contact');
                         const fallback = document.getElementById('contact-fallback');
                         const form = document.getElementById('contact-form');
+                        const startedAt = document.getElementById('contact-started-at');
+                        const widget = document.querySelector('#contact-form .cf-turnstile');
+                        const scriptEl = document.head.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]');
+                        const formFallbackLink = document.querySelector('#form-fallback a[href="mailto:2min@1min.dev"]');
                         const honeypotBox = document.querySelector('#contact-form .honeypot');
                         const honeypotInput = document.getElementById('contact-website');
                         const isVisible = el => Boolean(el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
                         const visibleMailCount = contact ? [...contact.querySelectorAll('a[href="mailto:2min@1min.dev"]')].filter(isVisible).length : 0;
-                        const visibleCopyCount = contact ? [...contact.querySelectorAll('button')].filter(isVisible).length : 0;
+                        const visibleCopyButtonCount = contact ? [...contact.querySelectorAll('#copy-email')].filter(isVisible).length : 0;
+                        const visibleButtonIds = contact ? [...contact.querySelectorAll('button')].filter(isVisible).map(btn => btn.id) : [];
                         return {
-                            fallbackVisible: Boolean(fallback && !fallback.hidden && getComputedStyle(fallback).display !== 'none' && fallback.getClientRects().length > 0),
+                            siteKeyMatches: Boolean(widget && widget.dataset.sitekey === expectedSiteKey),
+                            formVisible: Boolean(form && !form.hidden && getComputedStyle(form).display !== 'none' && form.getClientRects().length > 0),
+                            fallbackHidden: Boolean(fallback && fallback.hidden && getComputedStyle(fallback).display === 'none' && fallback.getClientRects().length === 0),
+                            startedAtPopulated: Boolean(startedAt && /^\\d{13,}$/.test(startedAt.value)),
+                            turnstileScriptInjected: Boolean(scriptEl && scriptEl.async && scriptEl.defer),
                             visibleMailCount,
-                            visibleCopyCount,
-                            formHidden: Boolean(form && form.hidden && getComputedStyle(form).display === 'none'),
+                            visibleCopyButtonCount,
+                            visibleButtonIds,
+                            formFallbackLinkExists: Boolean(formFallbackLink),
                             honeypotHidden: Boolean(
                                 honeypotBox &&
                                 honeypotBox.hidden &&
                                 honeypotBox.getAttribute('aria-hidden') === 'true' &&
                                 getComputedStyle(honeypotBox).display === 'none' &&
+                                honeypotBox.getClientRects().length === 0 &&
                                 honeypotInput &&
                                 honeypotInput.tabIndex === -1 &&
-                                honeypotInput.getAttribute('autocomplete') === 'off'
+                                honeypotInput.getAttribute('autocomplete') === 'off' &&
+                                honeypotInput.getClientRects().length === 0
                             ),
                         };
-                    })()""")
+                    }""", TURNSTILE_PUBLIC_SITEKEY)
                     if (
-                        contact_state["fallbackVisible"]
+                        contact_state["siteKeyMatches"]
+                        and contact_state["formVisible"]
+                        and contact_state["fallbackHidden"]
+                        and contact_state["startedAtPopulated"]
+                        and contact_state["turnstileScriptInjected"]
+                        and TURNSTILE_SCRIPT_URL in turnstile_requests
                         and contact_state["visibleMailCount"] == 1
-                        and contact_state["visibleCopyCount"] == 1
-                        and contact_state["formHidden"]
+                        and contact_state["visibleCopyButtonCount"] == 1
+                        and contact_state["visibleButtonIds"] == ["copy-email", "contact-submit"]
+                        and contact_state["formFallbackLinkExists"]
                     ):
-                        print("✅ [통과] 자리표시 Turnstile 키 상태에서 대체 안내 노출 및 이메일·복사 버튼 단일 노출 확인")
+                        print("✅ [통과] 실제 Turnstile 키 상태에서 양식 노출·대체 안내 숨김·스크립트 요청 확인")
                         passed += 1
                     else:
-                        print(f"❌ [실패] 자리표시 Turnstile 키 대체 안내 또는 단일 노출 오류: {contact_state}")
+                        print(
+                            f"❌ [실패] 실제 Turnstile 키 양식 노출 또는 스크립트 로드 상태 오류: "
+                            f"state={contact_state}, requests={turnstile_requests}"
+                        )
                         failed += 1
 
                     if contact_state["honeypotHidden"]:
-                        print("✅ [통과] 허니팟 필드 화면·보조기기 숨김 및 포커스 제외 확인")
+                        print("✅ [통과] 양식 노출 상태에서도 허니팟 필드 화면·보조기기 숨김 및 포커스 제외 확인")
                         passed += 1
                     else:
                         print(f"❌ [실패] 허니팟 필드 숨김 상태 미흡: {contact_state}")
                         failed += 1
+
+                    # Turnstile 스크립트를 못 불러왔을 때(빈 응답 가로채기 상태) 미인증 제출 방어 및 메일 대체 수단 확인
+                    page.fill("#contact-email", "tester@example.com")
+                    page.fill("#contact-message", "문의 테스트입니다.")
+                    page.check("#contact-consent")
+                    page.click("#contact-submit")
+                    blocked_submit_state = page.evaluate("""(() => {
+                        const contact = document.getElementById('contact');
+                        const status = document.getElementById('form-status');
+                        const count = document.getElementById('character-count');
+                        const directMail = document.querySelector('#contact .contact-mail[href="mailto:2min@1min.dev"]');
+                        const copyBtn = document.getElementById('copy-email');
+                        const formFallbackLink = document.querySelector('#form-fallback a[href="mailto:2min@1min.dev"]');
+                        const isVisible = el => Boolean(el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+                        return {
+                            statusText: status ? status.textContent.trim() : '',
+                            countText: count ? count.textContent.trim() : '',
+                            directMailVisible: isVisible(directMail),
+                            copyBtnVisible: isVisible(copyBtn),
+                            visibleMailCount: contact ? [...contact.querySelectorAll('a[href="mailto:2min@1min.dev"]')].filter(isVisible).length : 0,
+                            formFallbackLinkExists: Boolean(formFallbackLink),
+                        };
+                    })()""")
+                    if (
+                        blocked_submit_state["statusText"] == "보안 확인을 완료해 주세요."
+                        and blocked_submit_state["countText"] == "10 / 4000자"
+                        and blocked_submit_state["directMailVisible"]
+                        and blocked_submit_state["copyBtnVisible"]
+                        and blocked_submit_state["visibleMailCount"] == 1
+                        and blocked_submit_state["formFallbackLinkExists"]
+                        and not external_requests
+                    ):
+                        print("✅ [통과] Turnstile 스크립트 미로드(빈 응답) 시 미인증 제출 차단 안내 및 상시 메일 대체 수단 동작 확인")
+                        passed += 1
+                    else:
+                        print(
+                            f"❌ [실패] Turnstile 미로드 시 제출 방어 또는 메일 대체 안내 오류: "
+                            f"state={blocked_submit_state}, external={external_requests}"
+                        )
+                        failed += 1
+
+                    page.mouse.move(0, 0)
 
                 if tc["width"] in (1280, 390):
                     # A preceding click can leave the button hovered during its 140ms color transition.
@@ -1102,6 +1219,16 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
 
                 # [REWORK 1] 미리보기 캡처 직전 부드러운 스크롤 끄고 맨 위로 복귀 및 위치 안정화
                 if tc["shot"]:
+                    if tc["name"] == "desktop-1280-light":
+                        page.evaluate("""(() => {
+                            const form = document.getElementById('contact-form');
+                            const count = document.getElementById('character-count');
+                            const status = document.getElementById('form-status');
+                            if (form) form.reset();
+                            if (count) count.textContent = '0 / 4000자';
+                            if (status) status.textContent = '';
+                            if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+                        })()""")
                     page.evaluate("document.documentElement.style.scrollBehavior = 'auto'")
                     page.evaluate("window.scrollTo(0, 0)")
                     try:
@@ -1129,12 +1256,102 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                     passed += 1
 
                 if external_requests:
-                    print(f"❌ [실패] [{tc['name']}] 외부 자산(CDN 등) 요청 감지: {external_requests}")
+                    print(f"❌ [실패] [{tc['name']}] 허용되지 않은 외부 자산(CDN 등) 요청 감지: {external_requests}")
+                    failed += 1
+                else:
+                    passed += 1
+
+                if TURNSTILE_SCRIPT_URL not in turnstile_requests:
+                    print(f"❌ [실패] [{tc['name']}] Turnstile 스크립트 요청 누락: {turnstile_requests}")
                     failed += 1
                 else:
                     passed += 1
 
                 context.close()
+
+            # 테스트용 HTML 사본으로 자리표시 키(TURNSTILE_SITE_KEY) 상태 검증 (작업 트리에 임시 파일 미생성)
+            index_html_raw = (WORKSPACE_DIR / "index.html").read_text(encoding="utf-8")
+            placeholder_html = re.sub(
+                r'(<div\b[^>]*\bclass=["\'][^"\']*\bcf-turnstile\b[^"\']*["\'][^>]*\bdata-sitekey=["\'])[^"\']*(["\'])',
+                r"\1TURNSTILE_SITE_KEY\2",
+                index_html_raw,
+                count=1,
+            )
+            placeholder_context = browser.new_context(
+                viewport={"width": 1280, "height": 800},
+                color_scheme="light",
+            )
+            placeholder_page = placeholder_context.new_page()
+            ph_console_errors = []
+            ph_asset_404s = []
+            ph_external_requests = []
+            ph_turnstile_requests = []
+
+            def handle_placeholder_html(route):
+                route.fulfill(
+                    status=200,
+                    content_type="text/html; charset=utf-8",
+                    body=placeholder_html,
+                )
+
+            def handle_placeholder_turnstile(route):
+                ph_turnstile_requests.append(route.request.url)
+                route.fulfill(
+                    status=200,
+                    content_type="application/javascript; charset=utf-8",
+                    body="",
+                )
+
+            placeholder_page.route(f"{base_url}/__placeholder_key_test.html", handle_placeholder_html)
+            placeholder_page.route("https://challenges.cloudflare.com/**", handle_placeholder_turnstile)
+            placeholder_page.on("console", lambda msg: ph_console_errors.append(msg.text) if msg.type == "error" else None)
+            placeholder_page.on("response", lambda res: ph_asset_404s.append(res.url) if res.status >= 400 else None)
+            placeholder_page.on(
+                "request",
+                lambda req: ph_external_requests.append(req.url)
+                if not is_allowed_external_request(req.url, base_url)
+                else None,
+            )
+
+            ph_res = placeholder_page.goto(f"{base_url}/__placeholder_key_test.html", wait_until="networkidle")
+            ph_state = placeholder_page.evaluate("""(() => {
+                const contact = document.getElementById('contact');
+                const fallback = document.getElementById('contact-fallback');
+                const form = document.getElementById('contact-form');
+                const isVisible = el => Boolean(el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+                return {
+                    fallbackVisible: Boolean(fallback && !fallback.hidden && getComputedStyle(fallback).display !== 'none' && fallback.getClientRects().length > 0),
+                    formHidden: Boolean(form && form.hidden && getComputedStyle(form).display === 'none'),
+                    visibleMailCount: contact ? [...contact.querySelectorAll('a[href="mailto:2min@1min.dev"]')].filter(isVisible).length : 0,
+                    visibleCopyCount: contact ? [...contact.querySelectorAll('button')].filter(isVisible).length : 0,
+                    turnstileScriptInDom: Boolean(document.querySelector('script[src*="challenges.cloudflare.com"]')),
+                };
+            })()""")
+            if (
+                ph_res
+                and ph_res.status == 200
+                and "TURNSTILE_SITE_KEY" in placeholder_html
+                and TURNSTILE_PUBLIC_SITEKEY not in placeholder_html
+                and ph_state["fallbackVisible"]
+                and ph_state["formHidden"]
+                and ph_state["visibleMailCount"] == 1
+                and ph_state["visibleCopyCount"] == 1
+                and not ph_state["turnstileScriptInDom"]
+                and not ph_turnstile_requests
+                and not ph_external_requests
+                and not ph_console_errors
+                and not ph_asset_404s
+            ):
+                print("✅ [통과] 자리표시 키(HTML 사본) 상태에서 대체 안내 노출·양식 숨김·Turnstile 미요청 확인")
+                passed += 1
+            else:
+                print(
+                    f"❌ [실패] 자리표시 키(HTML 사본) 상태 검증 오류: "
+                    f"state={ph_state}, turnstile={ph_turnstile_requests}, external={ph_external_requests}, "
+                    f"console={ph_console_errors}, 404={ph_asset_404s}"
+                )
+                failed += 1
+            placeholder_context.close()
 
             browser.close()
 

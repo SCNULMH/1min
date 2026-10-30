@@ -9,7 +9,14 @@ from unittest.mock import MagicMock
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE_DIR / "scripts"))
 
-from verify_site import DRAFT_FORBIDDEN_TERMS, TeeLogger, validate_privacy_markup, validate_redesign_markup
+from verify_site import (
+    DRAFT_FORBIDDEN_TERMS,
+    TURNSTILE_PUBLIC_SITEKEY,
+    TeeLogger,
+    is_allowed_external_request,
+    validate_privacy_markup,
+    validate_redesign_markup,
+)
 
 
 VALID_LANDING = """
@@ -175,6 +182,50 @@ class TestRedesignMarkup(unittest.TestCase):
 
         unofficial_link = real_privacy.replace("</main>", '<a href="https://example.com/policy">외부</a></main>')
         self.assertTrue(any("비공식 외부 링크" in error for error in validate_privacy_markup(unofficial_link)))
+
+    def test_turnstile_sitekey_real_and_placeholder_formats(self):
+        self.assertEqual(validate_redesign_markup(VALID_LANDING), [])
+
+        with_real_key = VALID_LANDING.replace(
+            'data-sitekey="TURNSTILE_SITE_KEY"',
+            f'data-sitekey="{TURNSTILE_PUBLIC_SITEKEY}"',
+        )
+        self.assertEqual(validate_redesign_markup(with_real_key), [])
+
+        real_index = (WORKSPACE_DIR / "index.html").read_text(encoding="utf-8")
+        self.assertIn(f'data-sitekey="{TURNSTILE_PUBLIC_SITEKEY}"', real_index)
+        self.assertIn("siteKey==='TURNSTILE_SITE_KEY'", real_index)
+
+        for invalid_key in ("", "invalid", "0x12", "1x4AAAAAAFsvfCbrajidkTlI", "0x4AAAAAAFsvfCbrajidkTlI bad"):
+            broken = VALID_LANDING.replace('data-sitekey="TURNSTILE_SITE_KEY"', f'data-sitekey="{invalid_key}"')
+            self.assertTrue(
+                any("Turnstile 위젯" in error for error in validate_redesign_markup(broken)),
+                msg=f"invalid key should be rejected: {invalid_key!r}",
+            )
+
+    def test_external_request_allowlist(self):
+        base_url = "http://127.0.0.1:8123"
+        for allowed in (
+            base_url,
+            f"{base_url}/index.html",
+            f"{base_url}/assets/fonts/Pretendard-Regular.woff2",
+            "data:image/svg+xml;utf8,<svg></svg>",
+            "https://challenges.cloudflare.com",
+            "https://challenges.cloudflare.com/turnstile/v0/api.js",
+            "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile",
+        ):
+            self.assertTrue(is_allowed_external_request(allowed, base_url), msg=allowed)
+
+        for rejected in (
+            "http://challenges.cloudflare.com/turnstile/v0/api.js",
+            "https://challenges.cloudflare.com.attacker.com/turnstile/v0/api.js",
+            "https://challenges.cloudflare.com@attacker.com/turnstile/v0/api.js",
+            "http://127.0.0.1:81234/index.html",
+            "https://contact.1min.dev/api/contact",
+            "https://fonts.googleapis.com/css2?family=Noto+Sans+KR",
+            "https://cdn.jsdelivr.net/npm/library.js",
+        ):
+            self.assertFalse(is_allowed_external_request(rejected, base_url), msg=rejected)
 
 
 class TestTeeLogger(unittest.TestCase):
