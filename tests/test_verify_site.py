@@ -29,7 +29,7 @@ VALID_LANDING = """
 </section>
 <section id="featured-works"><article id="work-zerolingual"><img class="work-icon" src="assets/symbol-color.svg" alt="0개국어 앱 심볼"><div class="gallery app-gallery"><figure><button class="gallery-item" type="button" aria-label="0개국어 오늘의 단어 학습 화면 크게 보기"><img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면"></button><figcaption>오늘의 단어</figcaption></figure></div></article>
 <article id="work-newbie">출시 준비 중<div class="gallery newbie-gallery"><figure><button class="gallery-item" type="button" aria-label="신입 이사원 홈 대시보드 예시 화면 크게 보기"><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면"></button><figcaption>홈 대시보드</figcaption></figure></div></article></section>
-<section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.1min.dev">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="이디그디 사진 업로드와 조건 선택 화면 크게 보기"><img src="assets/idigdi-main.webp" alt="이디그디 사진 업로드와 조건 선택 화면"></button></figure></div></article>
+<section id="other-projects"><article id="work-idigdi"><h3 id="idigdi-title">이디그디</h3><p>사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.</p><p>2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.</p><a class="other-work-link" href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery deulmaru-gallery"><figure><button class="gallery-item" type="button" aria-label="이디그디 첫 화면 크게 보기"><img src="assets/idigdi-main.webp" alt="이디그디 첫 화면" width="1200" height="750" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 CLIP 분석 결과·닮은 여행지 화면 크게 보기"><img src="assets/idigdi-results.webp" alt="이디그디 CLIP 분석 결과·닮은 여행지 화면" width="1200" height="750" loading="lazy"></button><figcaption>CLIP 분석 결과·닮은 여행지</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 맞춤 여행 코스 화면 크게 보기"><img src="assets/idigdi-route.webp" alt="이디그디 맞춤 여행 코스 화면" width="1200" height="750" loading="lazy"></button><figcaption>맞춤 여행 코스</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 모바일 첫 화면 크게 보기"><img src="assets/idigdi-mobile.webp" alt="이디그디 모바일 첫 화면" width="555" height="1200" loading="lazy"></button><figcaption>모바일 첫 화면</figcaption></figure></div></article>
 <article id="work-naeil"><h3>내일이음</h3><p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="내일이음 첫 화면 크게 보기"><img src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"></button></figure></div></article>
 <article id="work-deulmaru" aria-labelledby="deulmaru-title"><h3 id="deulmaru-title">들마루</h3><p>청년 귀농인의 정착을 돕는 농업 정보 플랫폼. 지원사업 정보, 병해충 사전·상담, 사진으로 병해충을 판별하는 AI 기능을 한곳에 모았습니다.</p><p>서버는 지금 내려 두었고, 화면 기록과 코드를 공개합니다.</p><a href="https://github.com/SCNULMH/farmer-deulmaru" target="_blank" rel="noopener noreferrer">GitHub 저장소</a><div class="gallery deulmaru-gallery"><figure><button class="gallery-item" type="button" aria-label="들마루 첫 화면 크게 보기"><img src="assets/deulmaru-main.webp" alt="들마루 첫 화면" width="1280" height="786" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 지원사업 정보 화면 크게 보기"><img src="assets/deulmaru-support.webp" alt="들마루 지원사업 정보 화면" width="1024" height="617" loading="lazy"></button><figcaption>지원사업 정보</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 사전 화면 크게 보기"><img src="assets/deulmaru-pest.webp" alt="들마루 병해충 사전 화면" width="1024" height="626" loading="lazy"></button><figcaption>병해충 사전</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 상담 화면 크게 보기"><img src="assets/deulmaru-consulting.webp" alt="들마루 병해충 상담 화면" width="1024" height="614" loading="lazy"></button><figcaption>병해충 상담</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 AI 병해충 판별 화면 크게 보기"><img src="assets/deulmaru-ai.webp" alt="들마루 AI 병해충 판별 화면" width="1024" height="675" loading="lazy"></button><figcaption>AI 병해충 판별</figcaption></figure></div></article>
 <ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">내일이음</a></strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
@@ -83,7 +83,7 @@ class TestRedesignMarkup(unittest.TestCase):
         )
         errors = validate_redesign_markup(broken)
         self.assertTrue(any("히어로 CTA" in error for error in errors))
-        self.assertTrue(any("이디그디 캡처" in error for error in errors))
+        self.assertTrue(any("이디그디 갤러리" in error for error in errors))
 
     def test_wrong_order_and_forbidden_copy(self):
         broken = VALID_LANDING.replace(
@@ -357,6 +357,150 @@ class TestRedesignMarkup(unittest.TestCase):
 
         bad_alt = VALID_LANDING.replace('alt="내일이음 첫 화면"', 'alt="내일이음 화면"')
         self.assertTrue(any("내일이음 캡처 속성" in error for error in validate_redesign_markup(bad_alt)))
+
+    def test_idigdi_block_and_four_image_gallery(self):
+        start = VALID_LANDING.index('<article id="work-idigdi">')
+        end = VALID_LANDING.index("</article>", start) + len("</article>")
+        block = VALID_LANDING[start:end]
+        legacy_single = (
+            '<article id="work-idigdi"><h3 id="idigdi-title">이디그디</h3>'
+            "<p>사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.</p>"
+            "<p>2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.</p>"
+            '<a class="other-work-link" href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>'
+            '<div class="gallery other-gallery"><figure><button class="gallery-item" type="button" '
+            'aria-label="이디그디 사진 업로드와 조건 선택 화면 크게 보기">'
+            '<img src="assets/idigdi-main.webp" alt="이디그디 사진 업로드와 조건 선택 화면" width="1200" height="750" loading="lazy">'
+            "</button></figure></div></article>"
+        )
+        cases = (
+            ("missing block", VALID_LANDING.replace(block, ""), "이디그디 블록"),
+            (
+                "in featured works",
+                VALID_LANDING.replace(block, "").replace(
+                    '<article id="work-newbie">', block + '<article id="work-newbie">'
+                ),
+                "이디그디 블록",
+            ),
+            (
+                "after naeil",
+                VALID_LANDING.replace(block, "").replace(
+                    '<article id="work-deulmaru"', block + '<article id="work-deulmaru"'
+                ),
+                "이디그디 블록",
+            ),
+            ("after list", VALID_LANDING.replace(block, "").replace("</ol>", "</ol>" + block), "이디그디 블록"),
+            ("title", VALID_LANDING.replace('id="idigdi-title">이디그디', 'id="idigdi-title">다른 제목'), "이디그디 제목"),
+            (
+                "description 1",
+                VALID_LANDING.replace(
+                    "사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.",
+                    "다른 설명입니다.",
+                ),
+                "이디그디 제목",
+            ),
+            (
+                "description 2",
+                VALID_LANDING.replace(
+                    "2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.",
+                    "다른 기록입니다.",
+                ),
+                "이디그디 제목",
+            ),
+            (
+                "url",
+                VALID_LANDING.replace(
+                    'href="https://bw-jeju.1min.dev" target="_blank"',
+                    'href="https://other.1min.dev" target="_blank"',
+                ),
+                "이디그디 서비스 링크",
+            ),
+            (
+                "rel",
+                VALID_LANDING.replace(
+                    'href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer"',
+                    'href="https://bw-jeju.1min.dev" target="_blank"',
+                ),
+                "이디그디 서비스 링크",
+            ),
+            (
+                "extra link",
+                VALID_LANDING.replace(
+                    'href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>',
+                    'href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>'
+                    '<a href="https://github.com/SCNULMH/idigdi">저장소</a>',
+                ),
+                "이디그디 서비스 링크",
+            ),
+            ("legacy single capture", VALID_LANDING.replace(block, legacy_single), "이디그디 갤러리"),
+            (
+                "missing image",
+                VALID_LANDING.replace(
+                    '<figure><button class="gallery-item" type="button" aria-label="이디그디 모바일 첫 화면 크게 보기">'
+                    '<img src="assets/idigdi-mobile.webp" alt="이디그디 모바일 첫 화면" width="555" height="1200" loading="lazy">'
+                    "</button><figcaption>모바일 첫 화면</figcaption></figure>",
+                    "",
+                ),
+                "이디그디 갤러리",
+            ),
+            (
+                "extra image",
+                VALID_LANDING.replace(
+                    "<figcaption>모바일 첫 화면</figcaption></figure>",
+                    '<figcaption>모바일 첫 화면</figcaption></figure><figure><img src="assets/idigdi-mobile.webp"></figure>',
+                ),
+                "이디그디 갤러리",
+            ),
+            (
+                "order",
+                VALID_LANDING.replace("idigdi-results.webp", "idigdi-PLACEHOLDER.webp")
+                .replace("idigdi-route.webp", "idigdi-results.webp")
+                .replace("idigdi-PLACEHOLDER.webp", "idigdi-route.webp"),
+                "이디그디 갤러리",
+            ),
+            (
+                "mobile size",
+                VALID_LANDING.replace(
+                    'alt="이디그디 모바일 첫 화면" width="555" height="1200"',
+                    'alt="이디그디 모바일 첫 화면" width="1200" height="750"',
+                ),
+                "이디그디 갤러리",
+            ),
+            (
+                "desktop size",
+                VALID_LANDING.replace('alt="이디그디 첫 화면" width="1200"', 'alt="이디그디 첫 화면" width="1280"'),
+                "이디그디 갤러리",
+            ),
+            ("alt", VALID_LANDING.replace('alt="이디그디 첫 화면"', 'alt="첫 화면"'), "이디그디 갤러리"),
+            ("caption", VALID_LANDING.replace("<figcaption>맞춤 여행 코스</figcaption>", ""), "이디그디 갤러리"),
+            (
+                "button aria",
+                VALID_LANDING.replace(
+                    'aria-label="이디그디 맞춤 여행 코스 화면 크게 보기"',
+                    'aria-label="이디그디 맞춤 여행 코스 화면"',
+                ),
+                "이디그디 갤러리",
+            ),
+            (
+                "lazy loading",
+                VALID_LANDING.replace(
+                    'alt="이디그디 모바일 첫 화면" width="555" height="1200" loading="lazy"',
+                    'alt="이디그디 모바일 첫 화면" width="555" height="1200"',
+                ),
+                "이디그디 갤러리",
+            ),
+            (
+                "second gallery",
+                VALID_LANDING.replace(
+                    "<figcaption>CLIP 분석 결과·닮은 여행지</figcaption></figure>",
+                    '<figcaption>CLIP 분석 결과·닮은 여행지</figcaption></figure></div><div class="gallery">',
+                ),
+                "이디그디 갤러리",
+            ),
+        )
+        for name, broken, expected in cases:
+            with self.subTest(name=name):
+                self.assertNotEqual(broken, VALID_LANDING)
+                self.assertTrue(any(expected in error for error in validate_redesign_markup(broken)))
 
     def test_deulmaru_block_and_five_image_gallery(self):
         start = VALID_LANDING.index('<article id="work-deulmaru"')

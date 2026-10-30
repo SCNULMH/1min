@@ -272,6 +272,13 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         re.S | re.I,
     )
     if (
+        "work-idigdi" in featured_html
+        or not idigdi_in_other
+        or (naeil_in_other and idigdi_in_other.end() > naeil_in_other.start())
+        or (contest_list and idigdi_in_other.end() > contest_list.start())
+    ):
+        errors.append("이디그디 블록 누락 또는 배치 오류")
+    if (
         "work-naeil" in featured_html
         or not naeil_in_other
         or not idigdi_in_other
@@ -413,15 +420,55 @@ def validate_redesign_markup(html_content: str) -> list[str]:
     if "출시 준비 중" not in featured_html:
         errors.append("신입 이사원 상태 누락")
 
-    idigdi_article = re.search(r'<article\b[^>]*\bid=["\']work-idigdi["\'][^>]*>(.*?)</article>', html_content, re.S | re.I)
-    idigdi_html = idigdi_article.group(1) if idigdi_article else ""
-    idigdi_img_count = len(re.findall(r"<img\b", idigdi_html, re.I))
-    if idigdi_img_count == 0:
-        errors.append("이디그디 캡처 누락")
-    elif idigdi_img_count > 1:
-        errors.append("이디그디 캡처 1장 초과")
-    if not re.search(r'<a\b[^>]*href=["\']https://bw-jeju\.1min\.dev["\'][^>]*>\s*서비스 방문하기\s*</a>', idigdi_html):
-        errors.append("이디그디 서비스 링크 누락")
+    idigdi_html = idigdi_in_other.group(0) if idigdi_in_other else ""
+    idigdi_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", idigdi_html)).strip()
+    if not (
+        re.search(r'<h3\b[^>]*\bid=["\']idigdi-title["\'][^>]*>\s*이디그디\s*</h3>', idigdi_html)
+        and "사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다." in idigdi_text
+        and "2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다." in idigdi_text
+    ):
+        errors.append("이디그디 제목 또는 설명 누락")
+    idigdi_links = re.findall(r"<a\b[^>]*>.*?</a>", idigdi_html, re.S | re.I)
+    idigdi_link = re.search(
+        r'<a\b(?=[^>]*\bhref=["\']https://bw-jeju\.1min\.dev["\'])(?=[^>]*\btarget=["\']_blank["\'])([^>]*)>\s*서비스 방문하기\s*</a>',
+        idigdi_html,
+        re.I,
+    )
+    idigdi_rel = re.search(r'\brel=["\']([^"\']*)["\']', idigdi_link.group(1), re.I) if idigdi_link else None
+    if len(idigdi_links) != 1 or not idigdi_link or not idigdi_rel or not {"noopener", "noreferrer"}.issubset(set(idigdi_rel.group(1).lower().split())):
+        errors.append("이디그디 서비스 링크 또는 새 탭 보안 속성 누락")
+
+    idigdi_galleries = re.findall(
+        r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>(.*?)</div>',
+        idigdi_html,
+        re.S | re.I,
+    )
+    expected_idigdi = (
+        ("main", "이디그디 첫 화면", 1200, 750, "첫 화면"),
+        ("results", "이디그디 CLIP 분석 결과·닮은 여행지 화면", 1200, 750, "CLIP 분석 결과·닮은 여행지"),
+        ("route", "이디그디 맞춤 여행 코스 화면", 1200, 750, "맞춤 여행 코스"),
+        ("mobile", "이디그디 모바일 첫 화면", 555, 1200, "모바일 첫 화면"),
+    )
+    idigdi_figures = re.findall(r"<figure\b[^>]*>(.*?)</figure>", idigdi_galleries[0], re.S | re.I) if len(idigdi_galleries) == 1 else []
+    if len(idigdi_galleries) != 1 or len(idigdi_figures) != 4 or len(re.findall(r"<img\b", idigdi_html, re.I)) != 4:
+        errors.append("이디그디 갤러리 4장 구조 오류")
+    else:
+        for figure, (name, alt, width, height, caption) in zip(idigdi_figures, expected_idigdi):
+            match = re.fullmatch(
+                r'\s*<button\b(?=[^>]*\bclass=["\'][^"\']*\bgallery-item\b[^"\']*["\'])(?=[^>]*\btype=["\']button["\'])(?=[^>]*\baria-label=["\']' + re.escape(alt + " 크게 보기") + r'["\'])[^>]*>\s*(<img\b[^>]*>)\s*</button>\s*<figcaption>\s*' + re.escape(caption) + r'\s*</figcaption>\s*',
+                figure,
+                re.S | re.I,
+            )
+            img = match.group(1) if match else ""
+            attrs = (
+                (r'\bsrc=["\']assets/idigdi-' + name + r'\.webp["\']', img),
+                (r'\balt=["\']' + re.escape(alt) + r'["\']', img),
+                (rf'\bwidth=["\']{width}["\']', img),
+                (rf'\bheight=["\']{height}["\']', img),
+                (r'\bloading=["\']lazy["\']', img),
+            )
+            if not match or not all(re.search(pattern, value, re.I) for pattern, value in attrs):
+                errors.append(f"이디그디 갤러리 이미지 속성 또는 구조 오류: {name}")
 
     naeil_article = re.search(r'<article\b[^>]*\bid=["\']work-naeil["\'][^>]*>(.*?)</article>', html_content, re.S | re.I)
     naeil_html = naeil_article.group(1) if naeil_article else ""
@@ -943,6 +990,36 @@ def run_static_checks() -> tuple[int, int]:
         print("✅ [통과] 신규 WebP 캡처 규격 만족 (긴 변 <= 1200, 크기 <= 300KB)")
         passed += 1
 
+    idigdi_shot_errors = []
+    for name, width, height in (
+        ("main", 1200, 750),
+        ("results", 1200, 750),
+        ("route", 1200, 750),
+        ("mobile", 555, 1200),
+    ):
+        shot_rel = f"assets/idigdi-{name}.webp"
+        shot = WORKSPACE_DIR / shot_rel
+        if not shot.is_file():
+            idigdi_shot_errors.append(f"{shot_rel} 파일 누락")
+            continue
+        size_bytes = os.path.getsize(shot)
+        if size_bytes > 300000:
+            idigdi_shot_errors.append(f"{shot_rel} 크기 초과 ({size_bytes} > 300,000 bytes)")
+        try:
+            with Image.open(shot) as img:
+                if img.format != "WEBP":
+                    idigdi_shot_errors.append(f"{shot_rel} 포맷 오류 ({img.format})")
+                if img.size != (width, height):
+                    idigdi_shot_errors.append(f"{shot_rel} 해상도 불일치 ({img.size} != ({width}, {height}))")
+        except Exception as e:
+            idigdi_shot_errors.append(f"{shot_rel} 이미지 로드 실패: {e}")
+    if idigdi_shot_errors:
+        print(f"❌ [실패] 이디그디 캡처 규격 위반: {idigdi_shot_errors}")
+        failed += 1
+    else:
+        print("✅ [통과] 이디그디 WebP 4장 규격 만족 (지정 해상도, 크기 <= 300KB)")
+        passed += 1
+
     naeil_shot = WORKSPACE_DIR / "assets/naeil-home.webp"
     naeil_shot_errors = []
     if not naeil_shot.is_file():
@@ -1224,6 +1301,25 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                     print(f"❌ [실패] [{tc['name']}] 이미지/글꼴 로딩 완료 타임아웃: {e}")
                     failed += 1
 
+                post_load_overflow = page.evaluate("""(() => {
+                    const docW = document.documentElement.scrollWidth;
+                    const cliW = document.documentElement.clientWidth;
+                    const idigdi = document.getElementById('work-idigdi');
+                    const r = idigdi ? idigdi.getBoundingClientRect() : null;
+                    return {
+                        docW,
+                        cliW,
+                        idigdiLeft: r ? r.left : 0,
+                        idigdiRight: r ? r.right : 0,
+                        overflow: docW > cliW || Boolean(r && (r.left < -1 || r.right > cliW + 1)),
+                    };
+                })()""")
+                if post_load_overflow["overflow"]:
+                    print(f"❌ [실패] [{tc['name']}] 이미지 로드 후 가로 넘침 발생: {post_load_overflow}")
+                    failed += 1
+                else:
+                    passed += 1
+
                 # [REWORK 2] 앵커 이동 완료 대기 및 헤더 가림 / 뷰포트 내 표시 검사
                 # 부드러운 스크롤 끄고 즉각적이고 안정적인 이동 보장
                 page.evaluate("document.documentElement.style.scrollBehavior = 'auto'")
@@ -1479,7 +1575,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                     # (a), (c) 갤러리 키보드 열기 수단 및 #work-naeil 블록·링크·이미지 검증
                     gallery_naeil_state = page.evaluate("""(() => {
                         const galleryImgs = [...document.querySelectorAll('.gallery figure img')];
-                        const allWrapped = galleryImgs.length === 12 && galleryImgs.every(img => {
+                        const allWrapped = galleryImgs.length === 15 && galleryImgs.every(img => {
                             const btn = img.closest('button[type="button"]');
                             if (!btn) return false;
                             const label = btn.getAttribute('aria-label') || '';
@@ -1530,7 +1626,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         and gallery_naeil_state["naeilLinkOk"]
                         and gallery_naeil_state["naeilImgOk"]
                     ):
-                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(12장) 및 내일이음(#work-naeil) 블록·링크·이미지 확인")
+                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(15장) 및 내일이음(#work-naeil) 블록·링크·이미지 확인")
                         passed += 1
                     else:
                         print(f"❌ [실패] 갤러리 키보드 버튼 또는 내일이음 블록 오류: {gallery_naeil_state}")
@@ -1616,6 +1712,92 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         open: Boolean(document.getElementById('lightbox')?.open),
                         focusReturned: document.activeElement === document.querySelector('#work-naeil .gallery button.gallery-item'),
                     }))()""")
+
+                    idigdi_thumb_state = page.evaluate("""(() => {
+                        const imgs = [...document.querySelectorAll('#work-idigdi .gallery figure img')];
+                        if (imgs.length !== 4) return { ok: false, count: imgs.length };
+                        const rects = imgs.map(img => img.getBoundingClientRect());
+                        const mobileStyle = getComputedStyle(imgs[3]);
+                        return {
+                            ok: (
+                                imgs[0].naturalWidth === 1200 && imgs[0].naturalHeight === 750 &&
+                                imgs[1].naturalWidth === 1200 && imgs[1].naturalHeight === 750 &&
+                                imgs[2].naturalWidth === 1200 && imgs[2].naturalHeight === 750 &&
+                                imgs[3].naturalWidth === 555 && imgs[3].naturalHeight === 1200 &&
+                                rects[0].width > rects[1].width * 1.8 &&
+                                Math.abs(rects[3].height - rects[1].height) <= 1 &&
+                                Math.abs(rects[3].height - rects[2].height) <= 1 &&
+                                rects[3].width > rects[3].height &&
+                                mobileStyle.objectFit === 'cover'
+                            ),
+                            rects: rects.map(r => ({ width: r.width, height: r.height })),
+                            objectFit: mobileStyle.objectFit,
+                        };
+                    })()""")
+                    idigdi_btn = page.locator("#work-idigdi .gallery button.gallery-item").first
+                    idigdi_btn.click()
+                    idigdi_steps = []
+                    for step in range(5):
+                        page.wait_for_function(
+                            "() => { const img = document.getElementById('lightbox-image'); return Boolean(img && img.complete && img.naturalWidth > 0); }",
+                            timeout=5000,
+                        )
+                        idigdi_steps.append(page.evaluate("""(() => {
+                            const dlg = document.getElementById('lightbox');
+                            const img = document.getElementById('lightbox-image');
+                            const r = img ? img.getBoundingClientRect() : { width: 0, height: 0 };
+                            const s = img ? getComputedStyle(img) : { objectFit: '' };
+                            return {
+                                open: Boolean(dlg && dlg.open),
+                                src: img ? img.getAttribute('src') : '',
+                                count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                                caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                                attrWidth: img ? Number(img.getAttribute('width')) : 0,
+                                attrHeight: img ? Number(img.getAttribute('height')) : 0,
+                                naturalWidth: img ? img.naturalWidth : 0,
+                                naturalHeight: img ? img.naturalHeight : 0,
+                                renderWidth: r.width,
+                                renderHeight: r.height,
+                                objectFit: s.objectFit,
+                            };
+                        })()"""))
+                        if step < 4:
+                            page.locator("#lightbox-next").click()
+                    page.keyboard.press("Escape")
+                    expected_idigdi_steps = [
+                        ("assets/idigdi-main.webp", "1 / 4", "첫 화면"),
+                        ("assets/idigdi-results.webp", "2 / 4", "CLIP 분석 결과·닮은 여행지"),
+                        ("assets/idigdi-route.webp", "3 / 4", "맞춤 여행 코스"),
+                        ("assets/idigdi-mobile.webp", "4 / 4", "모바일 첫 화면"),
+                        ("assets/idigdi-main.webp", "1 / 4", "첫 화면"),
+                    ]
+                    mobile_lb = idigdi_steps[3]
+                    mobile_content_ratio = (
+                        (mobile_lb["renderWidth"] - 2) / (mobile_lb["renderHeight"] - 2)
+                        if mobile_lb["renderHeight"] > 2
+                        else 0
+                    )
+                    idigdi_ok = (
+                        idigdi_thumb_state["ok"]
+                        and all(
+                            actual["open"] and (actual["src"], actual["count"], actual["caption"]) == expected
+                            for actual, expected in zip(idigdi_steps, expected_idigdi_steps)
+                        )
+                        and mobile_lb["attrWidth"] == 555
+                        and mobile_lb["attrHeight"] == 1200
+                        and mobile_lb["naturalWidth"] == 555
+                        and mobile_lb["naturalHeight"] == 1200
+                        and mobile_lb["objectFit"] == "contain"
+                        and mobile_lb["renderHeight"] > mobile_lb["renderWidth"]
+                        and abs(mobile_content_ratio - (555 / 1200)) < 0.02
+                        and not page.locator("#lightbox").evaluate("(dlg) => dlg.open")
+                    )
+                    if idigdi_ok:
+                        print("✅ [통과] 이디그디 갤러리 4장 배치(모바일 썸네일 높이 맞춤) 및 라이트박스 4장 순환·원본 세로 비율 표시 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 이디그디 갤러리 또는 라이트박스 오류: thumb={idigdi_thumb_state}, steps={idigdi_steps}")
+                        failed += 1
 
                     deulmaru_btn = page.locator("#work-deulmaru .gallery button.gallery-item").first
                     deulmaru_btn.click()
