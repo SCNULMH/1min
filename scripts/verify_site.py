@@ -206,7 +206,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         errors.append(f"섹션 순서: {parser.sections}")
 
     ids = [value for _, value in parser.ids]
-    for required in ("work-zerolingual", "work-newbie", "work-idigdi", "work-naeil", "en"):
+    for required in ("work-zerolingual", "work-newbie", "work-idigdi", "work-naeil", "work-deulmaru", "en"):
         if required not in ids:
             errors.append(f"앵커 누락: {required}")
 
@@ -261,6 +261,11 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         other_html,
         re.S | re.I,
     )
+    deulmaru_in_other = re.search(
+        r'<article\b[^>]*\bid=["\']work-deulmaru["\'][^>]*>.*?</article>',
+        other_html,
+        re.S | re.I,
+    )
     contest_list = re.search(
         r'(<ol\b[^>]*\bclass=["\'][^"\']*\bcontest-list\b[^"\']*["\'][^>]*>)(.*?)</ol>',
         other_html,
@@ -274,6 +279,14 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         or (contest_list and naeil_in_other.end() > contest_list.start())
     ):
         errors.append("내일이음 블록 누락 또는 배치 오류")
+    if (
+        "work-deulmaru" in featured_html
+        or not deulmaru_in_other
+        or not naeil_in_other
+        or naeil_in_other.end() > deulmaru_in_other.start()
+        or (contest_list and deulmaru_in_other.end() > contest_list.start())
+    ):
+        errors.append("들마루 블록 누락 또는 배치 오류")
     if (
         not contest_list
         or len(all_contest_lists) != 1
@@ -442,6 +455,58 @@ def validate_redesign_markup(html_content: str) -> list[str]:
             and re.search(r'\bloading=["\']lazy["\']', naeil_img)
         ):
             errors.append("내일이음 캡처 속성(src·alt·width·height·loading) 오류")
+
+    deulmaru_html = deulmaru_in_other.group(0) if deulmaru_in_other else ""
+    deulmaru_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", deulmaru_html)).strip()
+    if not (
+        re.search(r'<h3\b[^>]*\bid=["\']deulmaru-title["\'][^>]*>\s*들마루\s*</h3>', deulmaru_html)
+        and "청년 귀농인의 정착을 돕는 농업 정보 플랫폼. 지원사업 정보, 병해충 사전·상담, 사진으로 병해충을 판별하는 AI 기능을 한곳에 모았습니다." in deulmaru_text
+        and "서버는 지금 내려 두었고, 화면 기록과 코드를 공개합니다." in deulmaru_text
+    ):
+        errors.append("들마루 제목 또는 설명 누락")
+    deulmaru_links = re.findall(r"<a\b[^>]*>.*?</a>", deulmaru_html, re.S | re.I)
+    github_link = re.search(
+        r'<a\b(?=[^>]*\bhref=["\']https://github\.com/SCNULMH/farmer-deulmaru["\'])(?=[^>]*\btarget=["\']_blank["\'])([^>]*)>\s*GitHub 저장소\s*</a>',
+        deulmaru_html,
+        re.I,
+    )
+    github_rel = re.search(r'\brel=["\']([^"\']*)["\']', github_link.group(1), re.I) if github_link else None
+    if len(deulmaru_links) != 1 or not github_link or not github_rel or not {"noopener", "noreferrer"}.issubset(set(github_rel.group(1).lower().split())):
+        errors.append("들마루 GitHub 링크 또는 새 탭 보안 속성 오류")
+
+    deulmaru_galleries = re.findall(
+        r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>(.*?)</div>',
+        deulmaru_html,
+        re.S | re.I,
+    )
+    expected_deulmaru = (
+        ("main", "첫", 1280, 786, "첫 화면"),
+        ("support", "지원사업 정보", 1024, 617, "지원사업 정보"),
+        ("pest", "병해충 사전", 1024, 626, "병해충 사전"),
+        ("consulting", "병해충 상담", 1024, 614, "병해충 상담"),
+        ("ai", "AI 병해충 판별", 1024, 675, "AI 병해충 판별"),
+    )
+    figures = re.findall(r"<figure\b[^>]*>(.*?)</figure>", deulmaru_galleries[0], re.S | re.I) if len(deulmaru_galleries) == 1 else []
+    if len(deulmaru_galleries) != 1 or len(figures) != 5 or len(re.findall(r"<img\b", deulmaru_html, re.I)) != 5:
+        errors.append("들마루 갤러리 5장 구조 오류")
+    else:
+        for figure, (name, label, width, height, caption) in zip(figures, expected_deulmaru):
+            alt = "들마루 첫 화면" if name == "main" else f"들마루 {label} 화면"
+            match = re.fullmatch(
+                r'\s*<button\b(?=[^>]*\bclass=["\'][^"\']*\bgallery-item\b[^"\']*["\'])(?=[^>]*\btype=["\']button["\'])(?=[^>]*\baria-label=["\']' + re.escape(alt + " 크게 보기") + r'["\'])[^>]*>\s*(<img\b[^>]*>)\s*</button>\s*<figcaption>\s*' + re.escape(caption) + r'\s*</figcaption>\s*',
+                figure,
+                re.S | re.I,
+            )
+            img = match.group(1) if match else ""
+            attrs = (
+                (r'\bsrc=["\']assets/deulmaru-' + name + r'\.webp["\']', img),
+                (r'\balt=["\']' + re.escape(alt) + r'["\']', img),
+                (rf'\bwidth=["\']{width}["\']', img),
+                (rf'\bheight=["\']{height}["\']', img),
+                (r'\bloading=["\']lazy["\']', img),
+            )
+            if not match or not all(re.search(pattern, value, re.I) for pattern, value in attrs):
+                errors.append(f"들마루 갤러리 이미지 속성 또는 구조 오류: {name}")
 
     galleries = re.findall(
         r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>(.*?)</div>',
@@ -900,6 +965,37 @@ def run_static_checks() -> tuple[int, int]:
         failed += 1
     else:
         print("✅ [통과] 내일이음 WebP 캡처 규격 만족 (1280×800, 크기 <= 300KB)")
+        passed += 1
+
+    deulmaru_shot_errors = []
+    for name, width, height in (
+        ("main", 1280, 786),
+        ("support", 1024, 617),
+        ("pest", 1024, 626),
+        ("consulting", 1024, 614),
+        ("ai", 1024, 675),
+    ):
+        shot_rel = f"assets/deulmaru-{name}.webp"
+        shot = WORKSPACE_DIR / shot_rel
+        if not shot.is_file():
+            deulmaru_shot_errors.append(f"{shot_rel} 파일 누락")
+            continue
+        size_bytes = os.path.getsize(shot)
+        if size_bytes > 300000:
+            deulmaru_shot_errors.append(f"{shot_rel} 크기 초과 ({size_bytes} > 300,000 bytes)")
+        try:
+            with Image.open(shot) as img:
+                if img.format != "WEBP":
+                    deulmaru_shot_errors.append(f"{shot_rel} 포맷 오류 ({img.format})")
+                if img.size != (width, height):
+                    deulmaru_shot_errors.append(f"{shot_rel} 해상도 불일치 ({img.size} != ({width}, {height}))")
+        except Exception as e:
+            deulmaru_shot_errors.append(f"{shot_rel} 이미지 로드 실패: {e}")
+    if deulmaru_shot_errors:
+        print(f"❌ [실패] 들마루 캡처 규격 위반: {deulmaru_shot_errors}")
+        failed += 1
+    else:
+        print("✅ [통과] 들마루 WebP 5장 규격 만족 (지정 해상도, 크기 <= 300KB)")
         passed += 1
 
     # 9. 글꼴 파일 및 문서 보관 검사
@@ -1383,7 +1479,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                     # (a), (c) 갤러리 키보드 열기 수단 및 #work-naeil 블록·링크·이미지 검증
                     gallery_naeil_state = page.evaluate("""(() => {
                         const galleryImgs = [...document.querySelectorAll('.gallery figure img')];
-                        const allWrapped = galleryImgs.length === 7 && galleryImgs.every(img => {
+                        const allWrapped = galleryImgs.length === 12 && galleryImgs.every(img => {
                             const btn = img.closest('button[type="button"]');
                             if (!btn) return false;
                             const label = btn.getAttribute('aria-label') || '';
@@ -1392,14 +1488,16 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         });
                         const idigdi = document.getElementById('work-idigdi');
                         const naeil = document.getElementById('work-naeil');
+                        const deulmaru = document.getElementById('work-deulmaru');
                         const contestList = document.querySelector('#other-projects ol.contest-list');
                         const naeilLink = naeil ? naeil.querySelector('a[href="https://bw-tomorrow.1min.dev"]') : null;
                         const naeilImgs = naeil ? [...naeil.querySelectorAll('img')] : [];
                         const naeilImg = naeilImgs[0] || null;
                         const orderOk = Boolean(
-                            idigdi && naeil && contestList &&
+                            idigdi && naeil && deulmaru && contestList &&
                             (idigdi.compareDocumentPosition(naeil) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-                            (naeil.compareDocumentPosition(contestList) & Node.DOCUMENT_POSITION_FOLLOWING)
+                            (naeil.compareDocumentPosition(deulmaru) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+                            (deulmaru.compareDocumentPosition(contestList) & Node.DOCUMENT_POSITION_FOLLOWING)
                         );
                         return {
                             galleryCount: galleryImgs.length,
@@ -1432,7 +1530,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         and gallery_naeil_state["naeilLinkOk"]
                         and gallery_naeil_state["naeilImgOk"]
                     ):
-                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(7장) 및 내일이음(#work-naeil) 블록·링크·이미지 확인")
+                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(12장) 및 내일이음(#work-naeil) 블록·링크·이미지 확인")
                         passed += 1
                     else:
                         print(f"❌ [실패] 갤러리 키보드 버튼 또는 내일이음 블록 오류: {gallery_naeil_state}")
@@ -1518,6 +1616,38 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         open: Boolean(document.getElementById('lightbox')?.open),
                         focusReturned: document.activeElement === document.querySelector('#work-naeil .gallery button.gallery-item'),
                     }))()""")
+
+                    deulmaru_btn = page.locator("#work-deulmaru .gallery button.gallery-item").first
+                    deulmaru_btn.click()
+                    deulmaru_steps = []
+                    for step in range(6):
+                        deulmaru_steps.append(page.evaluate("""(() => ({
+                            open: Boolean(document.getElementById('lightbox')?.open),
+                            src: document.getElementById('lightbox-image')?.getAttribute('src') || '',
+                            count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                            caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                        }))()"""))
+                        if step < 5:
+                            page.locator("#lightbox-next").click()
+                    page.keyboard.press("Escape")
+                    expected_deulmaru_steps = [
+                        ("assets/deulmaru-main.webp", "1 / 5", "첫 화면"),
+                        ("assets/deulmaru-support.webp", "2 / 5", "지원사업 정보"),
+                        ("assets/deulmaru-pest.webp", "3 / 5", "병해충 사전"),
+                        ("assets/deulmaru-consulting.webp", "4 / 5", "병해충 상담"),
+                        ("assets/deulmaru-ai.webp", "5 / 5", "AI 병해충 판별"),
+                        ("assets/deulmaru-main.webp", "1 / 5", "첫 화면"),
+                    ]
+                    deulmaru_ok = all(
+                        actual["open"] and (actual["src"], actual["count"], actual["caption"]) == expected
+                        for actual, expected in zip(deulmaru_steps, expected_deulmaru_steps)
+                    ) and not page.locator("#lightbox").evaluate("(dlg) => dlg.open")
+                    if deulmaru_ok:
+                        print("✅ [통과] 들마루 라이트박스 5장 순서·캡션·카운트 및 첫 장 순환 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 들마루 라이트박스 순환 오류: {deulmaru_steps}")
+                        failed += 1
 
                     if (
                         kb_open_state["open"]

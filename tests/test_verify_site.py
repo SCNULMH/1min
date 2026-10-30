@@ -31,6 +31,7 @@ VALID_LANDING = """
 <article id="work-newbie">출시 준비 중<div class="gallery newbie-gallery"><figure><button class="gallery-item" type="button" aria-label="신입 이사원 홈 대시보드 예시 화면 크게 보기"><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면"></button><figcaption>홈 대시보드</figcaption></figure></div></article></section>
 <section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.1min.dev">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="이디그디 사진 업로드와 조건 선택 화면 크게 보기"><img src="assets/idigdi-main.webp" alt="이디그디 사진 업로드와 조건 선택 화면"></button></figure></div></article>
 <article id="work-naeil"><h3>내일이음</h3><p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="내일이음 첫 화면 크게 보기"><img src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"></button></figure></div></article>
+<article id="work-deulmaru" aria-labelledby="deulmaru-title"><h3 id="deulmaru-title">들마루</h3><p>청년 귀농인의 정착을 돕는 농업 정보 플랫폼. 지원사업 정보, 병해충 사전·상담, 사진으로 병해충을 판별하는 AI 기능을 한곳에 모았습니다.</p><p>서버는 지금 내려 두었고, 화면 기록과 코드를 공개합니다.</p><a href="https://github.com/SCNULMH/farmer-deulmaru" target="_blank" rel="noopener noreferrer">GitHub 저장소</a><div class="gallery deulmaru-gallery"><figure><button class="gallery-item" type="button" aria-label="들마루 첫 화면 크게 보기"><img src="assets/deulmaru-main.webp" alt="들마루 첫 화면" width="1280" height="786" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 지원사업 정보 화면 크게 보기"><img src="assets/deulmaru-support.webp" alt="들마루 지원사업 정보 화면" width="1024" height="617" loading="lazy"></button><figcaption>지원사업 정보</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 사전 화면 크게 보기"><img src="assets/deulmaru-pest.webp" alt="들마루 병해충 사전 화면" width="1024" height="626" loading="lazy"></button><figcaption>병해충 사전</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 상담 화면 크게 보기"><img src="assets/deulmaru-consulting.webp" alt="들마루 병해충 상담 화면" width="1024" height="614" loading="lazy"></button><figcaption>병해충 상담</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 AI 병해충 판별 화면 크게 보기"><img src="assets/deulmaru-ai.webp" alt="들마루 AI 병해충 판별 화면" width="1024" height="675" loading="lazy"></button><figcaption>AI 병해충 판별</figcaption></figure></div></article>
 <ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">내일이음</a></strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
 <section id="experience"><article><span class="period">2026</span><div><h3>공공데이터·AI 활용 공모전 출품</h3><p>이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발</p></div></article></section>
 <section id="company">
@@ -356,6 +357,34 @@ class TestRedesignMarkup(unittest.TestCase):
 
         bad_alt = VALID_LANDING.replace('alt="내일이음 첫 화면"', 'alt="내일이음 화면"')
         self.assertTrue(any("내일이음 캡처 속성" in error for error in validate_redesign_markup(bad_alt)))
+
+    def test_deulmaru_block_and_five_image_gallery(self):
+        start = VALID_LANDING.index('<article id="work-deulmaru"')
+        end = VALID_LANDING.index("</article>", start) + len("</article>")
+        block = VALID_LANDING[start:end]
+        cases = (
+            ("missing block", VALID_LANDING.replace(block, ""), "들마루 블록"),
+            ("before naeil", VALID_LANDING.replace(block, "").replace('<article id="work-naeil">', block + '<article id="work-naeil">'), "들마루 블록"),
+            ("after list", VALID_LANDING.replace(block, "").replace("</ol>", "</ol>" + block), "들마루 블록"),
+            ("title", VALID_LANDING.replace('id="deulmaru-title">들마루', 'id="deulmaru-title">다른 제목'), "들마루 제목"),
+            ("description", VALID_LANDING.replace("청년 귀농인의 정착을 돕는 농업 정보 플랫폼.", "다른 설명."), "들마루 제목"),
+            ("status", VALID_LANDING.replace("서버는 지금 내려 두었고, 화면 기록과 코드를 공개합니다.", "운영 중입니다."), "들마루 제목"),
+            ("url", VALID_LANDING.replace("https://github.com/SCNULMH/farmer-deulmaru", "https://github.com/SCNULMH/other"), "들마루 GitHub"),
+            ("rel", VALID_LANDING.replace('href="https://github.com/SCNULMH/farmer-deulmaru" target="_blank" rel="noopener noreferrer"', 'href="https://github.com/SCNULMH/farmer-deulmaru" target="_blank"'), "들마루 GitHub"),
+            ("visit link", VALID_LANDING.replace("GitHub 저장소</a>", 'GitHub 저장소</a><a href="https://deulmaru.example">서비스 방문하기</a>'), "들마루 GitHub"),
+            ("missing image", VALID_LANDING.replace('<figure><button class="gallery-item" type="button" aria-label="들마루 AI 병해충 판별 화면 크게 보기"><img src="assets/deulmaru-ai.webp" alt="들마루 AI 병해충 판별 화면" width="1024" height="675" loading="lazy"></button><figcaption>AI 병해충 판별</figcaption></figure>', ""), "들마루 갤러리"),
+            ("extra image", VALID_LANDING.replace('<figcaption>AI 병해충 판별</figcaption></figure>', '<figcaption>AI 병해충 판별</figcaption></figure><figure><img src="assets/deulmaru-ai.webp"></figure>'), "들마루 갤러리"),
+            ("order", VALID_LANDING.replace("deulmaru-support.webp", "deulmaru-PLACEHOLDER.webp").replace("deulmaru-pest.webp", "deulmaru-support.webp").replace("deulmaru-PLACEHOLDER.webp", "deulmaru-pest.webp"), "들마루 갤러리"),
+            ("size", VALID_LANDING.replace('alt="들마루 첫 화면" width="1280"', 'alt="들마루 첫 화면" width="1200"'), "들마루 갤러리"),
+            ("alt", VALID_LANDING.replace('alt="들마루 첫 화면"', 'alt="첫 화면"'), "들마루 갤러리"),
+            ("caption", VALID_LANDING.replace("<figcaption>병해충 사전</figcaption>", ""), "들마루 갤러리"),
+            ("button", VALID_LANDING.replace('aria-label="들마루 병해충 상담 화면 크게 보기"', 'aria-label="들마루 병해충 상담 화면"'), "들마루 갤러리"),
+            ("second gallery", VALID_LANDING.replace('<figcaption>병해충 사전</figcaption></figure>', '<figcaption>병해충 사전</figcaption></figure></div><div class="gallery">'), "들마루 갤러리"),
+        )
+        for name, broken, expected in cases:
+            with self.subTest(name=name):
+                self.assertNotEqual(broken, VALID_LANDING)
+                self.assertTrue(any(expected in error for error in validate_redesign_markup(broken)))
 
     def test_gallery_keyboard_triggers_and_lightbox_dialog(self):
         unwrapped_img = VALID_LANDING.replace(
