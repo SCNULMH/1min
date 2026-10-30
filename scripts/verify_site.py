@@ -389,7 +389,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
     idigdi_html = idigdi_article.group(1) if idigdi_article else ""
     if len(re.findall(r"<img\b", idigdi_html, re.I)) > 1:
         errors.append("이디그디 캡처 1장 초과")
-    if not re.search(r'<a\b[^>]*href=["\']https://bw-jeju\.duckdns\.org["\'][^>]*>\s*서비스 방문하기\s*</a>', idigdi_html):
+    if not re.search(r'<a\b[^>]*href=["\']https://bw-jeju\.1min\.dev["\'][^>]*>\s*서비스 방문하기\s*</a>', idigdi_html):
         errors.append("이디그디 서비스 링크 누락")
     if "AWS EC2" in html_content or "HTTPS" in html_content:
         errors.append("운영 세부 표현 잔존")
