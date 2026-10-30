@@ -66,7 +66,7 @@ class TeeLogger:
 
 # 보호 문서 기준 SHA-256 해시
 PROTECTED_HASHES = {
-    "newbie-helper/privacy.html": "f25896a13cc1c9457d9a54d9cd466f429aa9462a7e44a5937823833bd35f6f58",
+    "newbie-helper/privacy.html": "1cee5da5b2160a818a063d5f4cdf18d657f69ffe4c42d2330fa4db4da3aece61",
     "newbie-helper/account-deletion.html": "6b1e209c552c54c4e2b80862dc052abc6eb709c67c0c3ede78cd8691ca8a14c7",
 }
 
