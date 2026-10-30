@@ -95,6 +95,45 @@ DRAFT_FORBIDDEN_TERMS = (
     "확정 전",
 )
 
+EXPECTED_CONTEST_SERVICE_ITEMS = (
+    "이디그디 — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱",
+    "닮은 부산 — 이미지와 닮은 부산 명소와 반일·1일 코스를 추천하는 웹앱",
+    "닮은 세종 — 이미지로 닮은 세종 여행지를 찾는 웹앱",
+    "검진AI 리셋코치 — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱",
+    "내일이음 — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱",
+    "들마루 — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스",
+)
+
+CONTEST_LIST_FORBIDDEN_TERMS = (
+    "공모전",
+    "경진대회",
+    "해커톤",
+    "대회",
+    "2026",
+    "제4회",
+    "제11회",
+    "제12회",
+    "contest-year",
+    "contest-name",
+)
+
+CONTEST_RESULT_FORBIDDEN_TERMS = (
+    "수상",
+    "입상",
+    "대상",
+    "최우수상",
+    "우수상",
+    "장려상",
+    "입선",
+    "탈락",
+)
+
+EXPECTED_EXPERIENCE_CONTEST_ENTRY = (
+    "2026",
+    "공공데이터·AI 활용 공모전 출품",
+    "이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발",
+)
+
 TURNSTILE_PUBLIC_SITEKEY = "0x4AAAAAAFsvfCbrajidkTlI"
 TURNSTILE_SITEKEY_PATTERN = r"(?:TURNSTILE_SITE_KEY|0x[0-9A-Za-z_-]{10,})"
 TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js"
@@ -182,12 +221,14 @@ def validate_redesign_markup(html_content: str) -> list[str]:
 
     featured = re.search(r'<section\b[^>]*\bid=["\']featured-works["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
     other = re.search(r'<section\b[^>]*\bid=["\']other-projects["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
+    experience = re.search(r'<section\b[^>]*\bid=["\']experience["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
     company = re.search(r'<section\b[^>]*\bid=["\']company["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
     contact = re.search(r'<section\b[^>]*\bid=["\']contact["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
     footer = re.search(r'<footer\b[^>]*>(.*?)</footer>', html_content, re.S | re.I)
 
     featured_html = featured.group(1) if featured else ""
     other_html = other.group(1) if other else ""
+    experience_html = experience.group(1) if experience else ""
     company_html = company.group(1) if company else ""
     contact_html = contact.group(1) if contact else ""
     footer_html = footer.group(1) if footer else ""
@@ -202,19 +243,91 @@ def validate_redesign_markup(html_content: str) -> list[str]:
     if "work-idigdi" in featured_html or "work-idigdi" not in other_html:
         errors.append("이디그디 섹션 위치")
 
-    contest_names = (
-        "2026 관광데이터 활용 공모전",
-        "제4회 문화체육관광 인공지능·데이터 활용 공모전",
-        "2026 부산광역시 공공데이터·AI 활용 창업경진대회",
-        "2026 세종특별자치시 데이터·AI 활용 창업경진대회",
-        "2026 보건의료빅데이터·AI 활용 창업경진대회",
-        "2026 고용24 국민참여 AI 고용서비스 발굴 온라인 해커톤",
-        "제11회 농업·농촌 공공데이터+AI 활용 창업경진대회",
+    if re.search(r"\bcontest-heading\b", html_content, re.I):
+        errors.append("공모전 도전 소제목(contest-heading) 잔존")
+    if re.search(r"\bcontest-(?:year|name)\b", html_content, re.I):
+        errors.append("서비스 목록 내 대회명 또는 연도 표기 금지 위반")
+
+    all_contest_lists = re.findall(
+        r'<ol\b[^>]*\bclass=["\'][^"\']*\bcontest-list\b[^"\']*["\'][^>]*>',
+        html_content,
+        re.I,
     )
-    contest_list = re.search(r'<ol\b[^>]*\bclass=["\'][^"\']*\bcontest-list\b[^"\']*["\'][^>]*>(.*?)</ol>', other_html, re.S | re.I)
-    if not contest_list or any(contest_list.group(1).count(name) != 1 for name in contest_names):
-        errors.append("공모전 도전 목록 누락 또는 섹션 위치 오류")
-    elif any(word in contest_list.group(1) for word in ("수상", "입상", "대상", "최우수상", "우수상", "장려상", "입선", "탈락")):
+    idigdi_in_other = re.search(
+        r'<article\b[^>]*\bid=["\']work-idigdi["\'][^>]*>.*?</article>',
+        other_html,
+        re.S | re.I,
+    )
+    contest_list = re.search(
+        r'(<ol\b[^>]*\bclass=["\'][^"\']*\bcontest-list\b[^"\']*["\'][^>]*>)(.*?)</ol>',
+        other_html,
+        re.S | re.I,
+    )
+    if (
+        not contest_list
+        or len(all_contest_lists) != 1
+        or not idigdi_in_other
+        or idigdi_in_other.end() > contest_list.start()
+    ):
+        errors.append("그 밖의 개발 서비스 목록 누락 또는 배치 오류")
+    else:
+        ol_open_tag = contest_list.group(1)
+        contest_list_inner = contest_list.group(2)
+        contest_list_full = contest_list.group(0)
+
+        aria_label_match = re.search(r'\baria-label=["\']([^"\']*)["\']', ol_open_tag, re.I)
+        if (
+            not aria_label_match
+            or not aria_label_match.group(1).strip()
+            or re.search(r'\baria-hidden=["\']true["\']', ol_open_tag, re.I)
+        ):
+            errors.append("그 밖의 개발 서비스 목록 aria-label 누락")
+
+        if any(term in contest_list_full for term in CONTEST_LIST_FORBIDDEN_TERMS) or re.search(
+            r"20\d{2}", contest_list_full
+        ):
+            errors.append("서비스 목록 내 대회명 또는 연도 표기 금지 위반")
+
+        li_matches = re.findall(r"<li\b[^>]*>(.*?)</li>", contest_list_inner, re.S | re.I)
+        li_texts = tuple(
+            re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", item)).strip()
+            for item in li_matches
+        )
+        if li_texts != EXPECTED_CONTEST_SERVICE_ITEMS:
+            errors.append("그 밖의 개발 서비스 목록 문구 불일치")
+
+        if any(word in contest_list_full for word in CONTEST_RESULT_FORBIDDEN_TERMS):
+            errors.append("공모전 결과 표기 금지 위반")
+
+    exp_articles = re.findall(r"<article\b[^>]*>(.*?)</article>", experience_html, re.S | re.I)
+    exp_period, exp_title, exp_desc = EXPECTED_EXPERIENCE_CONTEST_ENTRY
+    matching_contest_articles = []
+    contest_keyword_articles = []
+    for article_inner in exp_articles:
+        if any(k in article_inner for k in ("공모전", "경진대회", "해커톤", "출품")):
+            contest_keyword_articles.append(article_inner)
+        period_m = re.search(
+            r'<span\b[^>]*\bclass=["\'][^"\']*\bperiod\b[^"\']*["\'][^>]*>(.*?)</span>',
+            article_inner,
+            re.S | re.I,
+        )
+        title_m = re.search(r"<h3\b[^>]*>(.*?)</h3>", article_inner, re.S | re.I)
+        desc_matches = re.findall(r"<p\b[^>]*>(.*?)</p>", article_inner, re.S | re.I)
+        if (
+            period_m
+            and title_m
+            and len(desc_matches) == 1
+            and "<br" not in desc_matches[0].lower()
+            and re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", period_m.group(1))).strip() == exp_period
+            and re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", title_m.group(1))).strip() == exp_title
+            and re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", desc_matches[0])).strip() == exp_desc
+        ):
+            matching_contest_articles.append(article_inner)
+
+    if len(matching_contest_articles) != 1 or len(contest_keyword_articles) != 1:
+        errors.append("경력 섹션 공모전 출품 한 줄 누락 또는 형식 오류")
+
+    if any(word in experience_html for word in CONTEST_RESULT_FORBIDDEN_TERMS):
         errors.append("공모전 결과 표기 금지 위반")
 
     if "skills" in parser.sections or re.search(r'href=["\']#skills["\']', html_content):

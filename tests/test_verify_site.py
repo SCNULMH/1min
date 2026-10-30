@@ -30,8 +30,8 @@ VALID_LANDING = """
 <section id="featured-works"><article id="work-zerolingual"></article>
 <article id="work-newbie">출시 준비 중</article></section>
 <section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.duckdns.org">서비스 방문하기</a><img src="assets/idigdi-main.webp"></article>
-<ol class="contest-list"><li>2026 관광데이터 활용 공모전</li><li>제4회 문화체육관광 인공지능·데이터 활용 공모전</li><li>2026 부산광역시 공공데이터·AI 활용 창업경진대회</li><li>2026 세종특별자치시 데이터·AI 활용 창업경진대회</li><li>2026 보건의료빅데이터·AI 활용 창업경진대회</li><li>2026 고용24 국민참여 AI 고용서비스 발굴 온라인 해커톤</li><li>제11회 농업·농촌 공공데이터+AI 활용 창업경진대회</li></ol></section>
-<section id="experience"></section>
+<ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>닮은 부산</strong> — 이미지와 닮은 부산 명소와 반일·1일 코스를 추천하는 웹앱</li><li><strong>닮은 세종</strong> — 이미지로 닮은 세종 여행지를 찾는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong>내일이음</strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
+<section id="experience"><article><span class="period">2026</span><div><h3>공공데이터·AI 활용 공모전 출품</h3><p>이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발</p></div></article></section>
 <section id="company">
 <p>업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.</p>
 <ul><li>최적화된 서비스를 만들어내는 개발자</li><li>경험을 통해 성장해 나가는 개발자</li><li>사람들의 불편함 속에서 필요로 하는 것을 고민하는 개발자</li></ul>
@@ -83,23 +83,112 @@ class TestRedesignMarkup(unittest.TestCase):
         self.assertTrue(any("이디그디 캡처" in error for error in errors))
 
     def test_wrong_order_and_forbidden_copy(self):
-        broken = VALID_LANDING.replace('<section id="experience"></section>', '<section id="skills">롤백 스크립트</section><section id="experience"></section>')
+        broken = VALID_LANDING.replace(
+            '<section id="experience">',
+            '<section id="skills">롤백 스크립트</section><section id="experience">',
+        )
         errors = validate_redesign_markup(broken)
         self.assertTrue(any("섹션 순서" in error for error in errors))
         self.assertTrue(any("금지 문구" in error for error in errors))
 
     def test_contest_list_missing_or_outside_other_projects(self):
-        start = VALID_LANDING.index('<ol class="contest-list">')
+        start = VALID_LANDING.index('<ol class="contest-list"')
         end = VALID_LANDING.index('</ol>', start) + len('</ol>')
         contest_list = VALID_LANDING[start:end]
+
         for broken in (
             VALID_LANDING.replace(contest_list, ''),
-            VALID_LANDING.replace(contest_list, '').replace('<section id="experience">', contest_list + '<section id="experience">'),
-            VALID_LANDING.replace('2026 세종특별자치시 데이터·AI 활용 창업경진대회', ''),
+            VALID_LANDING.replace(contest_list, '').replace(
+                '<section id="experience">', contest_list + '<section id="experience">'
+            ),
+            VALID_LANDING.replace(contest_list, '').replace(
+                '<article id="work-idigdi">', contest_list + '<article id="work-idigdi">'
+            ),
         ):
-            self.assertTrue(any("공모전 도전 목록" in error for error in validate_redesign_markup(broken)))
-        with_result = VALID_LANDING.replace('2026 관광데이터 활용 공모전', '2026 관광데이터 활용 공모전 수상')
-        self.assertTrue(any("공모전" in error for error in validate_redesign_markup(with_result)))
+            self.assertTrue(
+                any("그 밖의 개발 서비스 목록 누락 또는 배치 오류" in error for error in validate_redesign_markup(broken))
+            )
+
+        missing_item = VALID_LANDING.replace(
+            "<li><strong>닮은 세종</strong> — 이미지로 닮은 세종 여행지를 찾는 웹앱</li>",
+            "",
+        )
+        self.assertTrue(
+            any("그 밖의 개발 서비스 목록 문구 불일치" in error for error in validate_redesign_markup(missing_item))
+        )
+
+        # contest-heading 잔존 거부
+        for heading_html in (
+            '<h3 id="contest-heading">공모전 도전</h3>',
+            '<h3 class="contest-heading">그 밖의 서비스</h3>',
+        ):
+            with_heading = VALID_LANDING.replace(contest_list, heading_html + contest_list)
+            self.assertTrue(
+                any("contest-heading" in error for error in validate_redesign_markup(with_heading)),
+                msg=heading_html,
+            )
+
+        # aria-label 누락·공백·aria-hidden 거부
+        for broken_aria in (
+            VALID_LANDING.replace(' aria-label="그 밖의 개발 서비스 목록"', ''),
+            VALID_LANDING.replace('aria-label="그 밖의 개발 서비스 목록"', 'aria-label="   "'),
+            VALID_LANDING.replace(
+                'aria-label="그 밖의 개발 서비스 목록"',
+                'aria-label="그 밖의 개발 서비스 목록" aria-hidden="true"',
+            ),
+        ):
+            self.assertTrue(
+                any("aria-label 누락" in error for error in validate_redesign_markup(broken_aria))
+            )
+
+        # (a) 목록 내 대회명('공모전', '경진대회', '해커톤', '대회') 및 연도('2026' 등) 거부
+        for forbidden_token in ("공모전", "경진대회", "해커톤", "대회", "2026", "제11회"):
+            with_contest_word = VALID_LANDING.replace(
+                "청년농 웹 서비스</li>",
+                f"청년농 웹 서비스 ({forbidden_token})</li>",
+            )
+            self.assertTrue(
+                any("대회명 또는 연도 표기 금지 위반" in error for error in validate_redesign_markup(with_contest_word)),
+                msg=forbidden_token,
+            )
+
+        aria_with_contest = VALID_LANDING.replace(
+            'aria-label="그 밖의 개발 서비스 목록"',
+            'aria-label="공모전 출품 서비스 목록"',
+        )
+        self.assertTrue(
+            any("대회명 또는 연도 표기 금지 위반" in error for error in validate_redesign_markup(aria_with_contest))
+        )
+
+        # (b) 경력 섹션 공모전 출품 한 줄 누락·변형·중복 거부
+        exp_start = VALID_LANDING.index('<section id="experience">')
+        exp_end = VALID_LANDING.index('</section>', exp_start) + len('</section>')
+        exp_section = VALID_LANDING[exp_start:exp_end]
+        for broken_exp in (
+            VALID_LANDING.replace(exp_section, '<section id="experience"></section>'),
+            VALID_LANDING.replace(
+                "공공데이터·AI 활용 공모전 출품",
+                "공모전 출품",
+            ),
+            VALID_LANDING.replace(
+                "외 서비스 개발</p>",
+                "외<br>서비스 개발</p>",
+            ),
+            VALID_LANDING.replace(
+                "</article></section>",
+                "</article><article><span class=\"period\">2026</span><div><h3>공모전 추가</h3><p>추가 출품</p></div></article></section>",
+            ),
+        ):
+            self.assertTrue(
+                any("경력 섹션 공모전 출품 한 줄" in error for error in validate_redesign_markup(broken_exp))
+            )
+
+        # 결과(수상·탈락 등) 표기 거부 (서비스 목록 및 경력 섹션 모두)
+        with_list_result = VALID_LANDING.replace("청년농 웹 서비스</li>", "청년농 웹 서비스 수상</li>")
+        self.assertTrue(any("결과 표기 금지 위반" in error for error in validate_redesign_markup(with_list_result)))
+
+        with_exp_result = VALID_LANDING.replace("외 서비스 개발</p>", "외 서비스 개발 · 입상</p>")
+        self.assertTrue(any("결과 표기 금지 위반" in error for error in validate_redesign_markup(with_exp_result)))
 
     def test_contact_form_labels_and_consent_required(self):
         missing_email_label = VALID_LANDING.replace('for="contact-email"', 'for="wrong-id"')
