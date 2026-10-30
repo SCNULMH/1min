@@ -478,6 +478,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         and "경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱" in naeil_text
     ):
         errors.append("내일이음 제목 또는 설명 누락")
+    naeil_links = re.findall(r"<a\b[^>]*>.*?</a>", naeil_html, re.S | re.I)
     naeil_link = re.search(
         r'<a\b(?=[^>]*\bhref=["\']https://bw-tomorrow\.1min\.dev["\'])(?=[^>]*\btarget=["\']_blank["\'])([^>]*)>\s*서비스 방문하기\s*</a>',
         naeil_html,
@@ -485,23 +486,41 @@ def validate_redesign_markup(html_content: str) -> list[str]:
     )
     naeil_rel = re.search(r'\brel=["\']([^"\']*)["\']', naeil_link.group(1), re.I) if naeil_link else None
     naeil_rel_tokens = set(naeil_rel.group(1).lower().split()) if naeil_rel else set()
-    if not naeil_link or not {"noopener", "noreferrer"}.issubset(naeil_rel_tokens):
+    if len(naeil_links) != 1 or not naeil_link or not {"noopener", "noreferrer"}.issubset(naeil_rel_tokens):
         errors.append("내일이음 서비스 링크 또는 새 탭 보안 속성 누락")
-    naeil_imgs = re.findall(r"<img\b[^>]*>", naeil_html, re.I)
-    if len(naeil_imgs) == 0:
-        errors.append("내일이음 캡처 누락")
-    elif len(naeil_imgs) > 1:
-        errors.append("내일이음 캡처 1장 초과")
+
+    naeil_galleries = re.findall(
+        r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>(.*?)</div>',
+        naeil_html,
+        re.S | re.I,
+    )
+    expected_naeil = (
+        ("home", "내일이음 첫 화면", 1280, 800, "첫 화면"),
+        ("career", "내일이음 내 경험 정리 화면", 1280, 800, "내 경험 정리"),
+        ("assessment", "내일이음 직업흥미 알아보기 화면", 1280, 800, "직업흥미 알아보기"),
+        ("jobs", "내일이음 채용공고 통합 검색 화면", 1280, 800, "채용공고 통합 검색"),
+        ("mobile", "내일이음 모바일 첫 화면", 390, 844, "모바일 첫 화면"),
+    )
+    naeil_figures = re.findall(r"<figure\b[^>]*>(.*?)</figure>", naeil_galleries[0], re.S | re.I) if len(naeil_galleries) == 1 else []
+    if len(naeil_galleries) != 1 or len(naeil_figures) != 5 or len(re.findall(r"<img\b", naeil_html, re.I)) != 5:
+        errors.append("내일이음 갤러리 5장 구조 오류")
     else:
-        naeil_img = naeil_imgs[0]
-        if not (
-            re.search(r'\bsrc=["\']assets/naeil-home\.webp["\']', naeil_img)
-            and re.search(r'\balt=["\']내일이음 첫 화면["\']', naeil_img)
-            and re.search(r'\bwidth=["\']1280["\']', naeil_img)
-            and re.search(r'\bheight=["\']800["\']', naeil_img)
-            and re.search(r'\bloading=["\']lazy["\']', naeil_img)
-        ):
-            errors.append("내일이음 캡처 속성(src·alt·width·height·loading) 오류")
+        for figure, (name, alt, width, height, caption) in zip(naeil_figures, expected_naeil):
+            match = re.fullmatch(
+                r'\s*<button\b(?=[^>]*\bclass=["\'][^"\']*\bgallery-item\b[^"\']*["\'])(?=[^>]*\btype=["\']button["\'])(?=[^>]*\baria-label=["\']' + re.escape(alt + " 크게 보기") + r'["\'])[^>]*>\s*(<img\b[^>]*>)\s*</button>\s*<figcaption>\s*' + re.escape(caption) + r'\s*</figcaption>\s*',
+                figure,
+                re.S | re.I,
+            )
+            img = match.group(1) if match else ""
+            attrs = (
+                (r'\bsrc=["\']assets/naeil-' + name + r'\.webp["\']', img),
+                (r'\balt=["\']' + re.escape(alt) + r'["\']', img),
+                (rf'\bwidth=["\']{width}["\']', img),
+                (rf'\bheight=["\']{height}["\']', img),
+                (r'\bloading=["\']lazy["\']', img),
+            )
+            if not match or not all(re.search(pattern, value, re.I) for pattern, value in attrs):
+                errors.append(f"내일이음 갤러리 이미지 속성 또는 구조 오류: {name}")
 
     deulmaru_html = deulmaru_in_other.group(0) if deulmaru_in_other else ""
     deulmaru_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", deulmaru_html)).strip()
@@ -554,6 +573,32 @@ def validate_redesign_markup(html_content: str) -> list[str]:
             )
             if not match or not all(re.search(pattern, value, re.I) for pattern, value in attrs):
                 errors.append(f"들마루 갤러리 이미지 속성 또는 구조 오류: {name}")
+
+    expected_gallery_themes = (
+        ("work-zerolingual", "zerolingual"),
+        ("work-newbie", "newbie"),
+        ("work-idigdi", "idigdi"),
+        ("work-naeil", "naeil"),
+        ("work-deulmaru", "deulmaru"),
+    )
+    for work_id, theme_name in expected_gallery_themes:
+        work_m = re.search(
+            r'<article\b[^>]*\bid=["\']' + re.escape(work_id) + r'["\'][^>]*>(.*?)</article>',
+            html_content,
+            re.S | re.I,
+        )
+        work_inner = work_m.group(1) if work_m else ""
+        gallery_open_tags = re.findall(
+            r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>',
+            work_inner,
+            re.I,
+        )
+        if len(gallery_open_tags) != 1 or not re.search(
+            r'\bdata-theme=["\']' + re.escape(theme_name) + r'["\']',
+            gallery_open_tags[0],
+            re.I,
+        ):
+            errors.append(f"갤러리 data-theme 누락 또는 불일치: {work_id} ({theme_name})")
 
     galleries = re.findall(
         r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>(.*?)</div>',
@@ -1020,28 +1065,67 @@ def run_static_checks() -> tuple[int, int]:
         print("✅ [통과] 이디그디 WebP 4장 규격 만족 (지정 해상도, 크기 <= 300KB)")
         passed += 1
 
-    naeil_shot = WORKSPACE_DIR / "assets/naeil-home.webp"
     naeil_shot_errors = []
-    if not naeil_shot.is_file():
-        naeil_shot_errors.append("assets/naeil-home.webp 파일 누락")
-    else:
-        naeil_bytes = os.path.getsize(naeil_shot)
-        if naeil_bytes > 300000:
-            naeil_shot_errors.append(f"assets/naeil-home.webp 크기 초과 ({naeil_bytes} > 300,000 bytes)")
+    for name, width, height in (
+        ("home", 1280, 800),
+        ("career", 1280, 800),
+        ("assessment", 1280, 800),
+        ("jobs", 1280, 800),
+        ("mobile", 390, 844),
+    ):
+        shot_rel = f"assets/naeil-{name}.webp"
+        shot = WORKSPACE_DIR / shot_rel
+        if not shot.is_file():
+            naeil_shot_errors.append(f"{shot_rel} 파일 누락")
+            continue
+        size_bytes = os.path.getsize(shot)
+        if size_bytes > 300000:
+            naeil_shot_errors.append(f"{shot_rel} 크기 초과 ({size_bytes} > 300,000 bytes)")
         try:
-            with Image.open(naeil_shot) as img:
+            with Image.open(shot) as img:
                 if img.format != "WEBP":
-                    naeil_shot_errors.append(f"assets/naeil-home.webp 포맷 오류 ({img.format})")
-                if img.size != (1280, 800):
-                    naeil_shot_errors.append(f"assets/naeil-home.webp 해상도 불일치 ({img.size} != (1280, 800))")
+                    naeil_shot_errors.append(f"{shot_rel} 포맷 오류 ({img.format})")
+                if img.size != (width, height):
+                    naeil_shot_errors.append(f"{shot_rel} 해상도 불일치 ({img.size} != ({width}, {height}))")
         except Exception as e:
-            naeil_shot_errors.append(f"assets/naeil-home.webp 이미지 로드 실패: {e}")
+            naeil_shot_errors.append(f"{shot_rel} 이미지 로드 실패: {e}")
 
     if naeil_shot_errors:
         print(f"❌ [실패] 내일이음 캡처 규격 위반: {naeil_shot_errors}")
         failed += 1
     else:
-        print("✅ [통과] 내일이음 WebP 캡처 규격 만족 (1280×800, 크기 <= 300KB)")
+        print("✅ [통과] 내일이음 WebP 5장 규격 만족 (지정 해상도, 크기 <= 300KB)")
+        passed += 1
+
+    # 홈페이지 본문 :root 토큰 불변 및 라이트박스 테마 변수(--lb-*) 출처 주석 검사
+    expected_root_light = ":root{--paper:#efe5cf;--paper-2:#e6dbc2;--ink:#1c1a16;--ink-2:#554e42;--ink-3:#6b6355;--rule:#cbbd9f;--seal:#b3382b;--seal-text:#982c21;--on-seal:#fff8eb;--ease-out:cubic-bezier(0.23,1,0.32,1);color-scheme:light}"
+    expected_root_dark = "@media(prefers-color-scheme:dark){:root{--paper:#14130f;--paper-2:#1d1b16;--ink:#ece5d6;--ink-2:#b4ac9c;--ink-3:#958d7e;--rule:#37332b;--seal:#e0644f;--seal-text:#f17b67;--on-seal:#14130f;color-scheme:dark}}"
+    style_m = re.search(r"<style>(.*?)</style>", html_content, re.S | re.I)
+    style_text = style_m.group(1) if style_m else ""
+    theme_token_errors = []
+    if expected_root_light not in style_text or expected_root_dark not in style_text:
+        theme_token_errors.append(":root 라이트/다크 본문 토큰 변경됨")
+    style_without_roots = style_text.replace(expected_root_light, "").replace(expected_root_dark, "")
+    for line in style_without_roots.splitlines():
+        if re.search(r":[^;{]*#[0-9a-fA-F]{3,8}\b", line):
+            if not re.match(r"^\s*--lb-[a-z-]+:\s*#[0-9a-fA-F]{3,8};/\*.+\*/\s*$", line):
+                theme_token_errors.append(f"허용 범위 밖 색상 또는 출처 주석 누락: {line.strip()[:60]}")
+    for theme_name, source_hint in (
+        ("zerolingual", "zerolingual/src/styles.css"),
+        ("newbie", "newbie-helper/src/styles/theme.ts"),
+        ("idigdi", "관광콘텐츠랩/static/styles.css"),
+        ("naeil", "고용24_국민참여_AI_고용서비스/web/styles.css"),
+        ("deulmaru", "deulmaru_const.css"),
+    ):
+        if len(re.findall(rf'\.lightbox\[data-theme=["\']{theme_name}["\']\]', style_text)) < 2:
+            theme_token_errors.append(f"{theme_name} 라이트/다크 테마 CSS 블록 누락")
+        if source_hint not in style_text:
+            theme_token_errors.append(f"{theme_name} 원본 출처 주석({source_hint}) 누락")
+    if theme_token_errors:
+        print(f"❌ [실패] 본문 :root 보존 또는 라이트박스 테마 토큰/출처 주석 오류: {theme_token_errors}")
+        failed += 1
+    else:
+        print("✅ [통과] 홈페이지 본문 :root 토큰 보존 및 5개 라이트박스 테마(--lb-*)·출처 주석 확인")
         passed += 1
 
     deulmaru_shot_errors = []
@@ -1572,15 +1656,26 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         )
                         failed += 1
 
-                    # (a), (c) 갤러리 키보드 열기 수단 및 #work-naeil 블록·링크·이미지 검증
+                    # (a), (c) 갤러리 키보드 열기 수단, data-theme 및 #work-naeil 블록·링크·5장 이미지 검증
                     gallery_naeil_state = page.evaluate("""(() => {
                         const galleryImgs = [...document.querySelectorAll('.gallery figure img')];
-                        const allWrapped = galleryImgs.length === 15 && galleryImgs.every(img => {
+                        const allWrapped = galleryImgs.length === 19 && galleryImgs.every(img => {
                             const btn = img.closest('button[type="button"]');
                             if (!btn) return false;
                             const label = btn.getAttribute('aria-label') || '';
                             const r = btn.getBoundingClientRect();
                             return label.includes('크게 보기') && r.width >= 44 && r.height >= 44;
+                        });
+                        const expectedThemes = [
+                            ['work-zerolingual', 'zerolingual'],
+                            ['work-newbie', 'newbie'],
+                            ['work-idigdi', 'idigdi'],
+                            ['work-naeil', 'naeil'],
+                            ['work-deulmaru', 'deulmaru'],
+                        ];
+                        const themesOk = expectedThemes.every(([id, theme]) => {
+                            const g = document.querySelector(`#${id} .gallery`);
+                            return Boolean(g && g.dataset.theme === theme);
                         });
                         const idigdi = document.getElementById('work-idigdi');
                         const naeil = document.getElementById('work-naeil');
@@ -1588,7 +1683,24 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         const contestList = document.querySelector('#other-projects ol.contest-list');
                         const naeilLink = naeil ? naeil.querySelector('a[href="https://bw-tomorrow.1min.dev"]') : null;
                         const naeilImgs = naeil ? [...naeil.querySelectorAll('img')] : [];
-                        const naeilImg = naeilImgs[0] || null;
+                        const expectedNaeilImgs = [
+                            ['assets/naeil-home.webp', '내일이음 첫 화면', 1280, 800],
+                            ['assets/naeil-career.webp', '내일이음 내 경험 정리 화면', 1280, 800],
+                            ['assets/naeil-assessment.webp', '내일이음 직업흥미 알아보기 화면', 1280, 800],
+                            ['assets/naeil-jobs.webp', '내일이음 채용공고 통합 검색 화면', 1280, 800],
+                            ['assets/naeil-mobile.webp', '내일이음 모바일 첫 화면', 390, 844],
+                        ];
+                        const naeilImgsOk = naeilImgs.length === 5 && expectedNaeilImgs.every(([src, alt, w, h], idx) => {
+                            const img = naeilImgs[idx];
+                            return Boolean(
+                                img &&
+                                img.getAttribute('src') === src &&
+                                img.alt === alt &&
+                                img.complete &&
+                                img.naturalWidth === w &&
+                                img.naturalHeight === h
+                            );
+                        });
                         const orderOk = Boolean(
                             idigdi && naeil && deulmaru && contestList &&
                             (idigdi.compareDocumentPosition(naeil) & Node.DOCUMENT_POSITION_FOLLOWING) &&
@@ -1598,6 +1710,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         return {
                             galleryCount: galleryImgs.length,
                             allWrapped,
+                            themesOk,
                             orderOk,
                             naeilTitle: naeil ? (naeil.querySelector('h3')?.textContent.trim() || '') : '',
                             naeilImgCount: naeilImgs.length,
@@ -1608,31 +1721,25 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                                 naeilLink.rel.includes('noreferrer') &&
                                 naeilLink.textContent.trim() === '서비스 방문하기'
                             ),
-                            naeilImgOk: Boolean(
-                                naeilImg &&
-                                naeilImg.getAttribute('src') === 'assets/naeil-home.webp' &&
-                                naeilImg.alt === '내일이음 첫 화면' &&
-                                naeilImg.complete &&
-                                naeilImg.naturalWidth === 1280 &&
-                                naeilImg.naturalHeight === 800
-                            ),
+                            naeilImgsOk,
                         };
                     })()""")
                     if (
                         gallery_naeil_state["allWrapped"]
+                        and gallery_naeil_state["themesOk"]
                         and gallery_naeil_state["orderOk"]
                         and gallery_naeil_state["naeilTitle"] == "내일이음"
-                        and gallery_naeil_state["naeilImgCount"] == 1
+                        and gallery_naeil_state["naeilImgCount"] == 5
                         and gallery_naeil_state["naeilLinkOk"]
-                        and gallery_naeil_state["naeilImgOk"]
+                        and gallery_naeil_state["naeilImgsOk"]
                     ):
-                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(15장) 및 내일이음(#work-naeil) 블록·링크·이미지 확인")
+                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(19장)·data-theme(5개) 및 내일이음(#work-naeil) 블록·링크·5장 이미지 확인")
                         passed += 1
                     else:
-                        print(f"❌ [실패] 갤러리 키보드 버튼 또는 내일이음 블록 오류: {gallery_naeil_state}")
+                        print(f"❌ [실패] 갤러리 키보드 버튼/data-theme 또는 내일이음 블록 오류: {gallery_naeil_state}")
                         failed += 1
 
-                    # (b) 라이트박스 dialog 열기(키보드·클릭), → 전환, 스와이프, Esc·배경 닫기, 포커스 복귀, 1장 갤러리 버튼 숨김 검증
+                    # (b) 라이트박스 dialog 열기(키보드·클릭), → 전환, 스와이프, Esc·배경 닫기, 포커스 복귀 검증
                     first_gallery_btn = page.locator("#work-zerolingual .gallery button.gallery-item").first
                     first_gallery_btn.focus()
                     page.keyboard.press("Enter")
@@ -1692,26 +1799,106 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         focusReturned: document.activeElement === document.querySelector('#work-zerolingual .gallery button.gallery-item'),
                     }))()""")
 
+                    naeil_thumb_state = page.evaluate("""(() => {
+                        const imgs = [...document.querySelectorAll('#work-naeil .gallery figure img')];
+                        if (imgs.length !== 5) return { ok: false, count: imgs.length };
+                        const rects = imgs.map(img => img.getBoundingClientRect());
+                        const mobileStyle = getComputedStyle(imgs[4]);
+                        return {
+                            ok: (
+                                imgs[0].naturalWidth === 1280 && imgs[0].naturalHeight === 800 &&
+                                imgs[1].naturalWidth === 1280 && imgs[1].naturalHeight === 800 &&
+                                imgs[2].naturalWidth === 1280 && imgs[2].naturalHeight === 800 &&
+                                imgs[3].naturalWidth === 1280 && imgs[3].naturalHeight === 800 &&
+                                imgs[4].naturalWidth === 390 && imgs[4].naturalHeight === 844 &&
+                                rects[0].width > rects[1].width * 1.8 &&
+                                Math.abs(rects[4].height - rects[3].height) <= 1 &&
+                                Math.abs(rects[4].height - rects[1].height) <= 1 &&
+                                rects[4].width > rects[4].height &&
+                                mobileStyle.objectFit === 'cover'
+                            ),
+                            rects: rects.map(r => ({ width: r.width, height: r.height })),
+                            objectFit: mobileStyle.objectFit,
+                        };
+                    })()""")
                     naeil_btn = page.locator("#work-naeil .gallery button.gallery-item").first
                     naeil_btn.click()
                     page.wait_for_timeout(240)
-                    single_state = page.evaluate("""(() => {
-                        const dlg = document.getElementById('lightbox');
-                        const prev = document.getElementById('lightbox-prev');
-                        const next = document.getElementById('lightbox-next');
-                        return {
-                            open: Boolean(dlg && dlg.open),
-                            src: document.getElementById('lightbox-image')?.getAttribute('src') || '',
-                            count: document.getElementById('lightbox-count')?.textContent.trim() || '',
-                            caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
-                            navHidden: Boolean(prev && prev.hidden && prev.getClientRects().length === 0 && next && next.hidden && next.getClientRects().length === 0),
-                        };
-                    })()""")
+                    naeil_steps = []
+                    for step in range(6):
+                        page.wait_for_function(
+                            "() => { const img = document.getElementById('lightbox-image'); return Boolean(img && img.complete && img.naturalWidth > 0); }",
+                            timeout=5000,
+                        )
+                        naeil_steps.append(page.evaluate("""(() => {
+                            const dlg = document.getElementById('lightbox');
+                            const img = document.getElementById('lightbox-image');
+                            const prev = document.getElementById('lightbox-prev');
+                            const next = document.getElementById('lightbox-next');
+                            const r = img ? img.getBoundingClientRect() : { width: 0, height: 0 };
+                            const s = img ? getComputedStyle(img) : { objectFit: '' };
+                            return {
+                                open: Boolean(dlg && dlg.open),
+                                theme: dlg ? dlg.dataset.theme : '',
+                                src: img ? img.getAttribute('src') : '',
+                                count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                                caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                                navVisible: Boolean(prev && !prev.hidden && next && !next.hidden && prev.getClientRects().length > 0 && next.getClientRects().length > 0),
+                                attrWidth: img ? Number(img.getAttribute('width')) : 0,
+                                attrHeight: img ? Number(img.getAttribute('height')) : 0,
+                                naturalWidth: img ? img.naturalWidth : 0,
+                                naturalHeight: img ? img.naturalHeight : 0,
+                                renderWidth: r.width,
+                                renderHeight: r.height,
+                                objectFit: s.objectFit,
+                            };
+                        })()"""))
+                        if step < 5:
+                            page.locator("#lightbox-next").click()
                     page.mouse.click(5, 5)
                     after_backdrop = page.evaluate("""(() => ({
                         open: Boolean(document.getElementById('lightbox')?.open),
                         focusReturned: document.activeElement === document.querySelector('#work-naeil .gallery button.gallery-item'),
                     }))()""")
+                    expected_naeil_steps = [
+                        ("assets/naeil-home.webp", "1 / 5", "첫 화면"),
+                        ("assets/naeil-career.webp", "2 / 5", "내 경험 정리"),
+                        ("assets/naeil-assessment.webp", "3 / 5", "직업흥미 알아보기"),
+                        ("assets/naeil-jobs.webp", "4 / 5", "채용공고 통합 검색"),
+                        ("assets/naeil-mobile.webp", "5 / 5", "모바일 첫 화면"),
+                        ("assets/naeil-home.webp", "1 / 5", "첫 화면"),
+                    ]
+                    naeil_mobile_lb = naeil_steps[4]
+                    naeil_mobile_ratio = (
+                        (naeil_mobile_lb["renderWidth"] - 2) / (naeil_mobile_lb["renderHeight"] - 2)
+                        if naeil_mobile_lb["renderHeight"] > 2
+                        else 0
+                    )
+                    naeil_ok = (
+                        naeil_thumb_state["ok"]
+                        and all(
+                            actual["open"]
+                            and actual["theme"] == "naeil"
+                            and actual["navVisible"]
+                            and (actual["src"], actual["count"], actual["caption"]) == expected
+                            for actual, expected in zip(naeil_steps, expected_naeil_steps)
+                        )
+                        and naeil_mobile_lb["attrWidth"] == 390
+                        and naeil_mobile_lb["attrHeight"] == 844
+                        and naeil_mobile_lb["naturalWidth"] == 390
+                        and naeil_mobile_lb["naturalHeight"] == 844
+                        and naeil_mobile_lb["objectFit"] == "contain"
+                        and naeil_mobile_lb["renderHeight"] > naeil_mobile_lb["renderWidth"]
+                        and abs(naeil_mobile_ratio - (390 / 844)) < 0.02
+                        and not after_backdrop["open"]
+                        and after_backdrop["focusReturned"]
+                    )
+                    if naeil_ok:
+                        print("✅ [통과] 내일이음 갤러리 5장 배치(모바일 썸네일 높이 맞춤) 및 라이트박스 5장 순환·원본 세로 비율·배경 닫기 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 내일이음 갤러리 또는 라이트박스 오류: thumb={naeil_thumb_state}, steps={naeil_steps}, backdrop={after_backdrop}")
+                        failed += 1
 
                     idigdi_thumb_state = page.evaluate("""(() => {
                         const imgs = [...document.querySelectorAll('#work-idigdi .gallery figure img')];
@@ -1852,21 +2039,16 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         and not after_esc["open"]
                         and after_esc["bodyOverflow"] != "hidden"
                         and after_esc["focusReturned"]
-                        and single_state["open"]
-                        and single_state["src"] == "assets/naeil-home.webp"
-                        and single_state["count"] == "1 / 1"
-                        and single_state["caption"] == "내일이음 첫 화면"
-                        and single_state["navHidden"]
                         and not after_backdrop["open"]
                         and after_backdrop["focusReturned"]
                     ):
-                        print("✅ [통과] 라이트박스 dialog 열기·→/스와이프 전환·Esc/배경 닫기·포커스 복귀·1장 버튼 숨김 확인")
+                        print("✅ [통과] 라이트박스 dialog 열기·→/스와이프 전환·Esc/배경 닫기·포커스 복귀 확인")
                         passed += 1
                     else:
                         print(
                             f"❌ [실패] 라이트박스 동작 오류: kb={kb_open_state}/{kb_close_returned}, "
                             f"step1={step1}, step2={step2}, step3={step3}, esc={after_esc}, "
-                            f"single={single_state}, backdrop={after_backdrop}"
+                            f"backdrop={after_backdrop}"
                         )
                         failed += 1
 
@@ -1940,74 +2122,133 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         print(f"✅ [통과] [{tc['name']}] 링크·버튼 44×44px 이상")
                         passed += 1
 
-                # (d) 열린 dialog 상태에서의 터치 영역 44×44px·대비 4.5:1·모션 감소 검증
+                # (d) 5개 테마별 열린 dialog 색상 구분·터치 영역 44×44px·대비 4.5:1·포커스 링·모션 감소 검증
                 if tc["width"] in (1280, 390):
-                    page.locator("#work-zerolingual .gallery button.gallery-item").first.click()
-                    page.mouse.move(0, 0)
-                    page.wait_for_timeout(240)
-                    dialog_a11y = page.evaluate("""(() => {
-                        const dlg = document.getElementById('lightbox');
-                        if (!dlg || !dlg.open) return { open: false, smallButtons: ['dialog-not-open'], contrastIssues: ['dialog-not-open'] };
-                        const parse = value => {
-                            const m = value.match(/[\\d.]+/g);
-                            return m ? m.slice(0, 4).map(Number) : null;
-                        };
-                        const luminance = rgb => {
-                            const c = rgb.slice(0, 3).map(v => {
-                                v /= 255;
-                                return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
-                            });
-                            return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
-                        };
-                        const visibleBtns = [...dlg.querySelectorAll('button')].filter(
-                            el => !el.hidden && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'
-                        );
-                        const smallButtons = visibleBtns
-                            .map(el => ({ id: el.id || el.tagName, width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height }))
-                            .filter(b => b.width < 44 || b.height < 44);
-                        const contrastIssues = [];
-                        for (const el of dlg.querySelectorAll('p, button, span, strong')) {
-                            if (!el.textContent.trim() || !el.getClientRects().length) continue;
-                            const fg = parse(getComputedStyle(el).color);
-                            let bg = null;
-                            for (let node = el; node && !bg; node = node.parentElement) {
-                                const c = parse(getComputedStyle(node).backgroundColor);
-                                if (c && (c.length < 4 || c[3] >= .99)) bg = c;
+                    theme_targets = (
+                        ("work-zerolingual", "zerolingual"),
+                        ("work-newbie", "newbie"),
+                        ("work-idigdi", "idigdi"),
+                        ("work-naeil", "naeil"),
+                        ("work-deulmaru", "deulmaru"),
+                    )
+                    theme_results = []
+                    dialog_reduced = False
+                    for idx, (work_id, expected_theme) in enumerate(theme_targets):
+                        trigger = page.locator(f"#{work_id} .gallery button.gallery-item").first
+                        trigger.scroll_into_view_if_needed()
+                        trigger.focus()
+                        page.keyboard.press("Enter")
+                        page.mouse.move(0, 0)
+                        page.wait_for_timeout(200)
+                        theme_a11y = page.evaluate("""(expectedTheme) => {
+                            const dlg = document.getElementById('lightbox');
+                            const panel = dlg ? dlg.querySelector('.lightbox-panel') : null;
+                            const closeBtn = document.getElementById('lightbox-close');
+                            if (!dlg || !dlg.open || !panel || !closeBtn) {
+                                return { open: false, expectedTheme, smallButtons: ['dialog-not-open'], contrastIssues: ['dialog-not-open'] };
                             }
-                            if (!bg) bg = parse(getComputedStyle(document.body).backgroundColor);
-                            if (!fg || !bg) continue;
-                            const a = luminance(fg), b = luminance(bg);
-                            const ratio = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
-                            if (ratio < 4.5) contrastIssues.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}: ${ratio.toFixed(2)}`);
-                        }
-                        return { open: true, buttonCount: visibleBtns.length, smallButtons, contrastIssues };
-                    })()""")
-                    page.emulate_media(reduced_motion="reduce")
-                    dialog_reduced = page.evaluate("""(() => {
-                        const panel = document.querySelector('#lightbox .lightbox-panel');
-                        if (!panel) return false;
-                        const s = getComputedStyle(panel);
-                        return s.animationName === 'none' || parseFloat(s.animationDuration) <= .001;
-                    })()""")
-                    page.emulate_media(reduced_motion="no-preference")
-                    page.click("#lightbox-close")
-                    page.mouse.move(0, 0)
-                    dialog_closed_ok = page.evaluate("() => !document.getElementById('lightbox').open")
+                            const parse = value => {
+                                const m = value.match(/[\\d.]+/g);
+                                return m ? m.slice(0, 4).map(Number) : null;
+                            };
+                            const luminance = rgb => {
+                                const c = rgb.slice(0, 3).map(v => {
+                                    v /= 255;
+                                    return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+                                });
+                                return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+                            };
+                            const contrastRatio = (c1, c2) => {
+                                if (!c1 || !c2) return 0;
+                                const a = luminance(c1), b = luminance(c2);
+                                return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+                            };
+                            const visibleBtns = [...dlg.querySelectorAll('button')].filter(
+                                el => !el.hidden && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'
+                            );
+                            const smallButtons = visibleBtns
+                                .map(el => ({ id: el.id || el.tagName, width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height }))
+                                .filter(b => b.width < 44 || b.height < 44);
+                            const contrastIssues = [];
+                            for (const el of dlg.querySelectorAll('p, button, span, strong')) {
+                                if (!el.textContent.trim() || !el.getClientRects().length) continue;
+                                const fg = parse(getComputedStyle(el).color);
+                                let bg = null;
+                                for (let node = el; node && !bg; node = node.parentElement) {
+                                    const c = parse(getComputedStyle(node).backgroundColor);
+                                    if (c && (c.length < 4 || c[3] >= .99)) bg = c;
+                                }
+                                if (!bg) bg = parse(getComputedStyle(document.body).backgroundColor);
+                                if (!fg || !bg) continue;
+                                const ratio = contrastRatio(fg, bg);
+                                if (ratio < 4.5) contrastIssues.push(`${expectedTheme}:${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}: ${ratio.toFixed(2)}`);
+                            }
+                            const panelStyle = getComputedStyle(panel);
+                            const closeStyle = getComputedStyle(closeBtn);
+                            const outlineRatio = contrastRatio(parse(closeStyle.outlineColor), parse(panelStyle.backgroundColor));
+                            const imgs = [...dlg.querySelectorAll('img')];
+                            return {
+                                open: true,
+                                expectedTheme,
+                                actualTheme: dlg.dataset.theme || '',
+                                onlyCaptureImg: imgs.length === 1 && imgs[0].id === 'lightbox-image',
+                                panelBg: panelStyle.backgroundColor,
+                                panelRadius: panelStyle.borderRadius,
+                                btnBg: closeStyle.backgroundColor,
+                                btnRadius: closeStyle.borderRadius,
+                                buttonCount: visibleBtns.length,
+                                smallButtons,
+                                contrastIssues,
+                                focusRingOk: (
+                                    document.activeElement === closeBtn &&
+                                    closeBtn.matches(':focus-visible') &&
+                                    parseFloat(closeStyle.outlineWidth) >= 2 &&
+                                    closeStyle.outlineStyle !== 'none' &&
+                                    outlineRatio >= 3.0
+                                ),
+                                outlineRatio: Number(outlineRatio.toFixed(2)),
+                            };
+                        }""", expected_theme)
+                        if idx == 0:
+                            page.emulate_media(reduced_motion="reduce")
+                            dialog_reduced = page.evaluate("""(() => {
+                                const panel = document.querySelector('#lightbox .lightbox-panel');
+                                if (!panel) return false;
+                                const s = getComputedStyle(panel);
+                                return s.animationName === 'none' || parseFloat(s.animationDuration) <= .001;
+                            })()""")
+                            page.emulate_media(reduced_motion="no-preference")
+                        page.click("#lightbox-close")
+                        page.mouse.move(0, 0)
+                        theme_a11y["closedOk"] = page.evaluate("() => !document.getElementById('lightbox').open")
+                        theme_results.append(theme_a11y)
 
-                    if (
-                        dialog_a11y["open"]
-                        and dialog_a11y["buttonCount"] == 3
-                        and not dialog_a11y["smallButtons"]
-                        and not dialog_a11y["contrastIssues"]
+                    unique_panel_bgs = {r.get("panelBg") for r in theme_results if r.get("open")}
+                    unique_btn_bgs = {r.get("btnBg") for r in theme_results if r.get("open")}
+                    all_themes_ok = (
+                        len(theme_results) == 5
+                        and all(
+                            r.get("open")
+                            and r.get("actualTheme") == r.get("expectedTheme")
+                            and r.get("onlyCaptureImg")
+                            and r.get("buttonCount") == 3
+                            and not r.get("smallButtons")
+                            and not r.get("contrastIssues")
+                            and r.get("focusRingOk")
+                            and r.get("closedOk")
+                            for r in theme_results
+                        )
+                        and len(unique_panel_bgs) == 5
+                        and len(unique_btn_bgs) == 5
                         and dialog_reduced
-                        and dialog_closed_ok
-                    ):
-                        print(f"✅ [통과] [{tc['name']}] 열린 dialog 버튼 44×44px 이상·대비 4.5:1 이상·모션 감소·닫기 버튼 확인")
+                    )
+                    if all_themes_ok:
+                        print(f"✅ [통과] [{tc['name']}] 5개 테마 라이트박스 색상 구분·버튼 44×44px·대비 4.5:1·포커스 링·모션 감소 확인")
                         passed += 1
                     else:
                         print(
-                            f"❌ [실패] [{tc['name']}] 열린 dialog 접근성/대비/크기 오류: "
-                            f"a11y={dialog_a11y}, reduced={dialog_reduced}, closed={dialog_closed_ok}"
+                            f"❌ [실패] [{tc['name']}] 테마별 라이트박스 색상 구분/접근성/대비/크기 오류: "
+                            f"results={theme_results}, unique_panel={len(unique_panel_bgs)}, unique_btn={len(unique_btn_bgs)}, reduced={dialog_reduced}"
                         )
                         failed += 1
 

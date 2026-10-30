@@ -27,11 +27,11 @@ VALID_LANDING = """
 <a href="#featured-works">대표 작업 보기</a><a href="#contact">문의하기</a>
 <aside><a href="#work-zerolingual">0개국어</a><a href="#work-newbie">신입 이사원<span>출시 준비 중</span></a></aside>
 </section>
-<section id="featured-works"><article id="work-zerolingual"><img class="work-icon" src="assets/symbol-color.svg" alt="0개국어 앱 심볼"><div class="gallery app-gallery"><figure><button class="gallery-item" type="button" aria-label="0개국어 오늘의 단어 학습 화면 크게 보기"><img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면"></button><figcaption>오늘의 단어</figcaption></figure></div></article>
-<article id="work-newbie">출시 준비 중<div class="gallery newbie-gallery"><figure><button class="gallery-item" type="button" aria-label="신입 이사원 홈 대시보드 예시 화면 크게 보기"><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면"></button><figcaption>홈 대시보드</figcaption></figure></div></article></section>
-<section id="other-projects"><article id="work-idigdi"><h3 id="idigdi-title">이디그디</h3><p>사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.</p><p>2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.</p><a class="other-work-link" href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery deulmaru-gallery"><figure><button class="gallery-item" type="button" aria-label="이디그디 첫 화면 크게 보기"><img src="assets/idigdi-main.webp" alt="이디그디 첫 화면" width="1200" height="750" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 CLIP 분석 결과·닮은 여행지 화면 크게 보기"><img src="assets/idigdi-results.webp" alt="이디그디 CLIP 분석 결과·닮은 여행지 화면" width="1200" height="750" loading="lazy"></button><figcaption>CLIP 분석 결과·닮은 여행지</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 맞춤 여행 코스 화면 크게 보기"><img src="assets/idigdi-route.webp" alt="이디그디 맞춤 여행 코스 화면" width="1200" height="750" loading="lazy"></button><figcaption>맞춤 여행 코스</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 모바일 첫 화면 크게 보기"><img src="assets/idigdi-mobile.webp" alt="이디그디 모바일 첫 화면" width="555" height="1200" loading="lazy"></button><figcaption>모바일 첫 화면</figcaption></figure></div></article>
-<article id="work-naeil"><h3>내일이음</h3><p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="내일이음 첫 화면 크게 보기"><img src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"></button></figure></div></article>
-<article id="work-deulmaru" aria-labelledby="deulmaru-title"><h3 id="deulmaru-title">들마루</h3><p>청년 귀농인의 정착을 돕는 농업 정보 플랫폼. 지원사업 정보, 병해충 사전·상담, 사진으로 병해충을 판별하는 AI 기능을 한곳에 모았습니다.</p><p>서버는 지금 내려 두었고, 화면 기록과 코드를 공개합니다.</p><a href="https://github.com/SCNULMH/farmer-deulmaru" target="_blank" rel="noopener noreferrer">GitHub 저장소</a><div class="gallery deulmaru-gallery"><figure><button class="gallery-item" type="button" aria-label="들마루 첫 화면 크게 보기"><img src="assets/deulmaru-main.webp" alt="들마루 첫 화면" width="1280" height="786" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 지원사업 정보 화면 크게 보기"><img src="assets/deulmaru-support.webp" alt="들마루 지원사업 정보 화면" width="1024" height="617" loading="lazy"></button><figcaption>지원사업 정보</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 사전 화면 크게 보기"><img src="assets/deulmaru-pest.webp" alt="들마루 병해충 사전 화면" width="1024" height="626" loading="lazy"></button><figcaption>병해충 사전</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 상담 화면 크게 보기"><img src="assets/deulmaru-consulting.webp" alt="들마루 병해충 상담 화면" width="1024" height="614" loading="lazy"></button><figcaption>병해충 상담</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 AI 병해충 판별 화면 크게 보기"><img src="assets/deulmaru-ai.webp" alt="들마루 AI 병해충 판별 화면" width="1024" height="675" loading="lazy"></button><figcaption>AI 병해충 판별</figcaption></figure></div></article>
+<section id="featured-works"><article id="work-zerolingual"><img class="work-icon" src="assets/symbol-color.svg" alt="0개국어 앱 심볼"><div class="gallery app-gallery" data-theme="zerolingual"><figure><button class="gallery-item" type="button" aria-label="0개국어 오늘의 단어 학습 화면 크게 보기"><img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면"></button><figcaption>오늘의 단어</figcaption></figure></div></article>
+<article id="work-newbie">출시 준비 중<div class="gallery newbie-gallery" data-theme="newbie"><figure><button class="gallery-item" type="button" aria-label="신입 이사원 홈 대시보드 예시 화면 크게 보기"><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면"></button><figcaption>홈 대시보드</figcaption></figure></div></article></section>
+<section id="other-projects"><article id="work-idigdi"><h3 id="idigdi-title">이디그디</h3><p>사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.</p><p>2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.</p><a class="other-work-link" href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery deulmaru-gallery" data-theme="idigdi"><figure><button class="gallery-item" type="button" aria-label="이디그디 첫 화면 크게 보기"><img src="assets/idigdi-main.webp" alt="이디그디 첫 화면" width="1200" height="750" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 CLIP 분석 결과·닮은 여행지 화면 크게 보기"><img src="assets/idigdi-results.webp" alt="이디그디 CLIP 분석 결과·닮은 여행지 화면" width="1200" height="750" loading="lazy"></button><figcaption>CLIP 분석 결과·닮은 여행지</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 맞춤 여행 코스 화면 크게 보기"><img src="assets/idigdi-route.webp" alt="이디그디 맞춤 여행 코스 화면" width="1200" height="750" loading="lazy"></button><figcaption>맞춤 여행 코스</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="이디그디 모바일 첫 화면 크게 보기"><img src="assets/idigdi-mobile.webp" alt="이디그디 모바일 첫 화면" width="555" height="1200" loading="lazy"></button><figcaption>모바일 첫 화면</figcaption></figure></div></article>
+<article id="work-naeil"><h3>내일이음</h3><p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery deulmaru-gallery" data-theme="naeil"><figure><button class="gallery-item" type="button" aria-label="내일이음 첫 화면 크게 보기"><img src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="내일이음 내 경험 정리 화면 크게 보기"><img src="assets/naeil-career.webp" alt="내일이음 내 경험 정리 화면" width="1280" height="800" loading="lazy"></button><figcaption>내 경험 정리</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="내일이음 직업흥미 알아보기 화면 크게 보기"><img src="assets/naeil-assessment.webp" alt="내일이음 직업흥미 알아보기 화면" width="1280" height="800" loading="lazy"></button><figcaption>직업흥미 알아보기</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="내일이음 채용공고 통합 검색 화면 크게 보기"><img src="assets/naeil-jobs.webp" alt="내일이음 채용공고 통합 검색 화면" width="1280" height="800" loading="lazy"></button><figcaption>채용공고 통합 검색</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="내일이음 모바일 첫 화면 크게 보기"><img src="assets/naeil-mobile.webp" alt="내일이음 모바일 첫 화면" width="390" height="844" loading="lazy"></button><figcaption>모바일 첫 화면</figcaption></figure></div></article>
+<article id="work-deulmaru" aria-labelledby="deulmaru-title"><h3 id="deulmaru-title">들마루</h3><p>청년 귀농인의 정착을 돕는 농업 정보 플랫폼. 지원사업 정보, 병해충 사전·상담, 사진으로 병해충을 판별하는 AI 기능을 한곳에 모았습니다.</p><p>서버는 지금 내려 두었고, 화면 기록과 코드를 공개합니다.</p><a href="https://github.com/SCNULMH/farmer-deulmaru" target="_blank" rel="noopener noreferrer">GitHub 저장소</a><div class="gallery deulmaru-gallery" data-theme="deulmaru"><figure><button class="gallery-item" type="button" aria-label="들마루 첫 화면 크게 보기"><img src="assets/deulmaru-main.webp" alt="들마루 첫 화면" width="1280" height="786" loading="lazy"></button><figcaption>첫 화면</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 지원사업 정보 화면 크게 보기"><img src="assets/deulmaru-support.webp" alt="들마루 지원사업 정보 화면" width="1024" height="617" loading="lazy"></button><figcaption>지원사업 정보</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 사전 화면 크게 보기"><img src="assets/deulmaru-pest.webp" alt="들마루 병해충 사전 화면" width="1024" height="626" loading="lazy"></button><figcaption>병해충 사전</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 병해충 상담 화면 크게 보기"><img src="assets/deulmaru-consulting.webp" alt="들마루 병해충 상담 화면" width="1024" height="614" loading="lazy"></button><figcaption>병해충 상담</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="들마루 AI 병해충 판별 화면 크게 보기"><img src="assets/deulmaru-ai.webp" alt="들마루 AI 병해충 판별 화면" width="1024" height="675" loading="lazy"></button><figcaption>AI 병해충 판별</figcaption></figure></div></article>
 <ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">내일이음</a></strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
 <section id="experience"><article><span class="period">2026</span><div><h3>공공데이터·AI 활용 공모전 출품</h3><p>이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발</p></div></article></section>
 <section id="company">
@@ -319,44 +319,165 @@ class TestRedesignMarkup(unittest.TestCase):
         ):
             self.assertFalse(is_allowed_external_request(rejected, base_url), msg=rejected)
 
-    def test_naeil_block_and_single_capture(self):
+    def test_naeil_block_and_five_image_gallery(self):
         start = VALID_LANDING.index('<article id="work-naeil">')
         end = VALID_LANDING.index("</article>", start) + len("</article>")
         naeil_block = VALID_LANDING[start:end]
+        legacy_single = (
+            '<article id="work-naeil"><h3>내일이음</h3>'
+            "<p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p>"
+            '<a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>'
+            '<div class="gallery other-gallery" data-theme="naeil"><figure><button class="gallery-item" type="button" '
+            'aria-label="내일이음 첫 화면 크게 보기">'
+            '<img src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy">'
+            "</button></figure></div></article>"
+        )
 
         missing_naeil = VALID_LANDING.replace(naeil_block, "")
         missing_errors = validate_redesign_markup(missing_naeil)
         self.assertTrue(any("work-naeil" in error for error in missing_errors))
         self.assertTrue(any("내일이음 블록" in error for error in missing_errors))
 
-        before_idigdi = VALID_LANDING.replace(naeil_block, "").replace(
-            '<article id="work-idigdi">', naeil_block + '<article id="work-idigdi">'
+        cases = (
+            (
+                "before idigdi",
+                VALID_LANDING.replace(naeil_block, "").replace(
+                    '<article id="work-idigdi">', naeil_block + '<article id="work-idigdi">'
+                ),
+                "내일이음 블록",
+            ),
+            (
+                "in featured works",
+                VALID_LANDING.replace(naeil_block, "").replace(
+                    '<article id="work-newbie">', naeil_block + '<article id="work-newbie">'
+                ),
+                "내일이음 블록",
+            ),
+            ("after list", VALID_LANDING.replace(naeil_block, "").replace("</ol>", "</ol>" + naeil_block), "내일이음 블록"),
+            ("title", VALID_LANDING.replace("<h3>내일이음</h3>", "<h3>다른 이름</h3>"), "내일이음 제목 또는 설명"),
+            (
+                "description",
+                VALID_LANDING.replace(
+                    "<p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p>",
+                    "<p>짧은 소개</p>",
+                ),
+                "내일이음 제목 또는 설명",
+            ),
+            (
+                "url",
+                VALID_LANDING.replace(
+                    '<a href="https://bw-tomorrow.1min.dev" target="_blank"',
+                    '<a href="https://other.1min.dev" target="_blank"',
+                ),
+                "내일이음 서비스 링크",
+            ),
+            (
+                "rel",
+                VALID_LANDING.replace(
+                    '<a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>',
+                    '<a href="https://bw-tomorrow.1min.dev" target="_blank">서비스 방문하기</a>',
+                ),
+                "내일이음 서비스 링크",
+            ),
+            (
+                "extra link",
+                VALID_LANDING.replace(
+                    '<a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>',
+                    '<a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>'
+                    '<a href="https://github.com/SCNULMH/naeil">저장소</a>',
+                ),
+                "내일이음 서비스 링크",
+            ),
+            ("legacy single capture", VALID_LANDING.replace(naeil_block, legacy_single), "내일이음 갤러리"),
+            (
+                "missing image",
+                VALID_LANDING.replace(
+                    '<figure><button class="gallery-item" type="button" aria-label="내일이음 모바일 첫 화면 크게 보기">'
+                    '<img src="assets/naeil-mobile.webp" alt="내일이음 모바일 첫 화면" width="390" height="844" loading="lazy">'
+                    "</button><figcaption>모바일 첫 화면</figcaption></figure>",
+                    "",
+                ),
+                "내일이음 갤러리",
+            ),
+            (
+                "extra image",
+                VALID_LANDING.replace(
+                    "<figcaption>채용공고 통합 검색</figcaption></figure>",
+                    '<figcaption>채용공고 통합 검색</figcaption></figure><figure><img src="assets/naeil-jobs.webp"></figure>',
+                ),
+                "내일이음 갤러리",
+            ),
+            (
+                "order",
+                VALID_LANDING.replace("naeil-career.webp", "naeil-PLACEHOLDER.webp")
+                .replace("naeil-assessment.webp", "naeil-career.webp")
+                .replace("naeil-PLACEHOLDER.webp", "naeil-assessment.webp"),
+                "내일이음 갤러리",
+            ),
+            (
+                "mobile size",
+                VALID_LANDING.replace(
+                    'alt="내일이음 모바일 첫 화면" width="390" height="844"',
+                    'alt="내일이음 모바일 첫 화면" width="1280" height="800"',
+                ),
+                "내일이음 갤러리",
+            ),
+            (
+                "desktop size",
+                VALID_LANDING.replace(
+                    'alt="내일이음 첫 화면" width="1280" height="800"',
+                    'alt="내일이음 첫 화면" width="1200" height="750"',
+                ),
+                "내일이음 갤러리",
+            ),
+            ("alt", VALID_LANDING.replace('alt="내일이음 첫 화면"', 'alt="내일이음 화면"'), "내일이음 갤러리"),
+            ("caption", VALID_LANDING.replace("<figcaption>직업흥미 알아보기</figcaption>", ""), "내일이음 갤러리"),
+            (
+                "button aria",
+                VALID_LANDING.replace(
+                    'aria-label="내일이음 채용공고 통합 검색 화면 크게 보기"',
+                    'aria-label="내일이음 채용공고 통합 검색 화면"',
+                ),
+                "내일이음 갤러리",
+            ),
+            (
+                "lazy loading",
+                VALID_LANDING.replace(
+                    'alt="내일이음 모바일 첫 화면" width="390" height="844" loading="lazy"',
+                    'alt="내일이음 모바일 첫 화면" width="390" height="844"',
+                ),
+                "내일이음 갤러리",
+            ),
+            (
+                "second gallery",
+                VALID_LANDING.replace(
+                    "<figcaption>내 경험 정리</figcaption></figure>",
+                    '<figcaption>내 경험 정리</figcaption></figure></div><div class="gallery" data-theme="naeil">',
+                ),
+                "내일이음 갤러리",
+            ),
         )
-        self.assertTrue(any("내일이음 블록" in error for error in validate_redesign_markup(before_idigdi)))
+        for name, broken, expected in cases:
+            with self.subTest(name=name):
+                self.assertNotEqual(broken, VALID_LANDING)
+                self.assertTrue(any(expected in error for error in validate_redesign_markup(broken)))
 
-        after_list = VALID_LANDING.replace(naeil_block, "").replace("</ol>", "</ol>" + naeil_block)
-        self.assertTrue(any("내일이음 블록" in error for error in validate_redesign_markup(after_list)))
-
-        missing_rel = VALID_LANDING.replace(
-            '<a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>',
-            '<a href="https://bw-tomorrow.1min.dev" target="_blank">서비스 방문하기</a>',
-        )
-        self.assertTrue(any("내일이음 서비스 링크" in error for error in validate_redesign_markup(missing_rel)))
-
-        missing_desc = VALID_LANDING.replace(
-            "<p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p>",
-            "<p>짧은 소개</p>",
-        )
-        self.assertTrue(any("내일이음 제목 또는 설명" in error for error in validate_redesign_markup(missing_desc)))
-
-        extra_capture = VALID_LANDING.replace(
-            'alt="내일이음 첫 화면" width="1280" height="800" loading="lazy">',
-            'alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"><img src="assets/naeil-home.webp" alt="추가">',
-        )
-        self.assertTrue(any("내일이음 캡처 1장 초과" in error for error in validate_redesign_markup(extra_capture)))
-
-        bad_alt = VALID_LANDING.replace('alt="내일이음 첫 화면"', 'alt="내일이음 화면"')
-        self.assertTrue(any("내일이음 캡처 속성" in error for error in validate_redesign_markup(bad_alt)))
+    def test_gallery_data_theme_contract(self):
+        for work_id, theme in (
+            ("work-zerolingual", "zerolingual"),
+            ("work-newbie", "newbie"),
+            ("work-idigdi", "idigdi"),
+            ("work-naeil", "naeil"),
+            ("work-deulmaru", "deulmaru"),
+        ):
+            with self.subTest(work_id=work_id, case="missing"):
+                missing = VALID_LANDING.replace(f' data-theme="{theme}"', "")
+                errors = validate_redesign_markup(missing)
+                self.assertTrue(any(f"갤러리 data-theme 누락 또는 불일치: {work_id}" in e for e in errors))
+            with self.subTest(work_id=work_id, case="wrong"):
+                wrong = VALID_LANDING.replace(f'data-theme="{theme}"', 'data-theme="wrong-theme"')
+                errors = validate_redesign_markup(wrong)
+                self.assertTrue(any(f"갤러리 data-theme 누락 또는 불일치: {work_id}" in e for e in errors))
 
     def test_idigdi_block_and_four_image_gallery(self):
         start = VALID_LANDING.index('<article id="work-idigdi">')
