@@ -84,10 +84,16 @@ EXPECTED_SECTIONS = [
     "featured-works",
     "other-projects",
     "experience",
-    "skills",
     "company",
     "contact",
 ]
+
+DRAFT_FORBIDDEN_TERMS = (
+    "사용자 확인 필요",
+    "검토안",
+    "검토 중",
+    "확정 전",
+)
 
 
 class SiteHTMLParser(HTMLParser):
@@ -142,31 +148,99 @@ def validate_redesign_markup(html_content: str) -> list[str]:
     parser = SiteHTMLParser()
     parser.feed(html_content)
     errors = []
-    if parser.sections[:7] != EXPECTED_SECTIONS:
-        errors.append(f"섹션 순서: {parser.sections[:7]}")
+    if parser.sections != EXPECTED_SECTIONS:
+        errors.append(f"섹션 순서: {parser.sections}")
 
     ids = [value for _, value in parser.ids]
     for required in ("work-zerolingual", "work-newbie", "work-idigdi", "en"):
         if required not in ids:
             errors.append(f"앵커 누락: {required}")
-    work_positions = [ids.index(work) for work in ("work-zerolingual", "work-newbie", "work-idigdi") if work in ids]
-    if len(work_positions) == 3 and work_positions != sorted(work_positions):
-        errors.append("대표 작업 순서")
+
+    expected_nav = ["featured-works", "company", "contact"]
+    if parser.nav_links != expected_nav:
+        errors.append(f"메뉴 앵커 순서 오류: {parser.nav_links}")
+    for anchor in expected_nav:
+        if anchor not in parser.nav_links or anchor not in ids:
+            errors.append(f"메뉴 앵커 누락: {anchor}")
+
+    featured = re.search(r'<section\b[^>]*\bid=["\']featured-works["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
+    other = re.search(r'<section\b[^>]*\bid=["\']other-projects["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
+    company = re.search(r'<section\b[^>]*\bid=["\']company["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
+    contact = re.search(r'<section\b[^>]*\bid=["\']contact["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
+    footer = re.search(r'<footer\b[^>]*>(.*?)</footer>', html_content, re.S | re.I)
+
+    featured_html = featured.group(1) if featured else ""
+    other_html = other.group(1) if other else ""
+    company_html = company.group(1) if company else ""
+    contact_html = contact.group(1) if contact else ""
+    footer_html = footer.group(1) if footer else ""
+
+    if not (
+        "work-zerolingual" in featured_html
+        and "work-newbie" in featured_html
+        and featured_html.index("work-zerolingual") < featured_html.index("work-newbie")
+        and len(re.findall(r"<article\b", featured_html, re.I)) == 2
+    ):
+        errors.append("대표 작업 순서 또는 개수 오류")
+    if "work-idigdi" in featured_html or "work-idigdi" not in other_html:
+        errors.append("이디그디 섹션 위치")
+
+    contest_names = (
+        "2026 관광데이터 활용 공모전",
+        "제4회 문화체육관광 인공지능·데이터 활용 공모전",
+        "2026 부산광역시 공공데이터·AI 활용 창업경진대회",
+        "2026 세종특별자치시 데이터·AI 활용 창업경진대회",
+        "2026 보건의료빅데이터·AI 활용 창업경진대회",
+        "2026 고용24 국민참여 AI 고용서비스 발굴 온라인 해커톤",
+        "제11회 농업·농촌 공공데이터+AI 활용 창업경진대회",
+    )
+    contest_list = re.search(r'<ol\b[^>]*\bclass=["\'][^"\']*\bcontest-list\b[^"\']*["\'][^>]*>(.*?)</ol>', other_html, re.S | re.I)
+    if not contest_list or any(contest_list.group(1).count(name) != 1 for name in contest_names):
+        errors.append("공모전 도전 목록 누락 또는 섹션 위치 오류")
+    elif any(word in contest_list.group(1) for word in ("수상", "입상", "대상", "최우수상", "우수상", "장려상", "입선", "탈락")):
+        errors.append("공모전 결과 표기 금지 위반")
+
+    if "skills" in parser.sections or re.search(r'href=["\']#skills["\']', html_content):
+        errors.append("기술 섹션/메뉴 잔존")
+    if "클덱스" in html_content or "Cldex" in html_content:
+        errors.append("클덱스 잔존")
 
     hero = re.search(r'<section\b[^>]*\bid=["\']hero["\'][^>]*>(.*?)</section>', html_content, re.S | re.I)
     hero_html = hero.group(1) if hero else ""
-    hero_text = re.sub(r"<[^>]+>", "", hero_html)
+    hero_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", hero_html)).strip()
     for phrase in (
-        "업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.",
-        "0개국어 Google Play 출시",
-        "이디그디 공개 서비스 운영",
-        "일민형 설립",
+        "작은 불편을",
+        "쓰이는 제품으로.",
+        "일민형은 일상의 문제를 웹과 앱으로 풀어내는 1인 소프트웨어 회사입니다. 이민형이 직접 만들고 다듬습니다.",
     ):
-        if phrase not in re.sub(r"\s+", " ", hero_text):
+        if phrase not in hero_text:
             errors.append(f"히어로 문구 누락: {phrase}")
-    for label, href in (("대표 작업 보기", "#featured-works"), ("문의하기", "mailto:2min@1min.dev")):
+    for label, href in (("대표 작업 보기", "#featured-works"), ("문의하기", "#contact")):
         if not re.search(r'<a\b(?=[^>]*\bhref=["\']' + re.escape(href) + r'["\'])[^>]*>\s*' + label + r'\s*</a>', hero_html, re.S):
             errors.append(f"히어로 CTA 누락: {label}")
+    if not (
+        re.search(r'href=["\']#work-zerolingual["\']', hero_html)
+        and re.search(r'href=["\']#work-newbie["\']', hero_html)
+        and hero_html.index("#work-zerolingual") < hero_html.index("#work-newbie")
+        and "0개국어" in hero_html
+        and "신입 이사원" in hero_html
+        and "출시 준비 중" in hero_html
+        and "work-idigdi" not in hero_html
+    ):
+        errors.append("히어로 우측 미리보기 구성 오류")
+
+    company_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", company_html)).strip()
+    for phrase in (
+        "업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.",
+        "최적화된 서비스를 만들어내는 개발자",
+        "경험을 통해 성장해 나가는 개발자",
+        "사람들의 불편함 속에서 필요로 하는 것을 고민하는 개발자",
+    ):
+        if phrase not in company_text:
+            errors.append(f"회사 소개 문구 누락: {phrase}")
+    for term, desc in COMPANY_INFO_ITEMS:
+        if not re.search(r"<dt>\s*" + re.escape(term) + r"\s*</dt>\s*<dd>\s*" + re.escape(desc) + r"\s*</dd>", company_html):
+            errors.append(f"사업자 정보 누락: {term}")
 
     hrefs = {href for href, _ in parser.anchors}
     for href in (
@@ -176,23 +250,203 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         "https://bw-jeju.duckdns.org",
         "mailto:2min@1min.dev",
         "#en",
+        "privacy.html",
     ):
         if href not in hrefs:
             errors.append(f"필수 링크 누락: {href}")
-    if "출시 준비 중" not in html_content:
+    if "출시 준비 중" not in featured_html:
         errors.append("신입 이사원 상태 누락")
+
     idigdi_article = re.search(r'<article\b[^>]*\bid=["\']work-idigdi["\'][^>]*>(.*?)</article>', html_content, re.S | re.I)
     idigdi_html = idigdi_article.group(1) if idigdi_article else ""
-    for shot in ("idigdi-main", "idigdi-results", "idigdi-route", "idigdi-mobile"):
-        if f"assets/{shot}.webp" not in idigdi_html:
-            errors.append(f"이디그디 캡처 노출 누락: {shot}")
-    if "클덱스" not in html_content:
-        errors.append("클덱스 누락")
+    if len(re.findall(r"<img\b", idigdi_html, re.I)) > 1:
+        errors.append("이디그디 캡처 1장 초과")
+    if not re.search(r'<a\b[^>]*href=["\']https://bw-jeju\.duckdns\.org["\'][^>]*>\s*서비스 방문하기\s*</a>', idigdi_html):
+        errors.append("이디그디 서비스 링크 누락")
+    if "AWS EC2" in html_content or "HTTPS" in html_content:
+        errors.append("운영 세부 표현 잔존")
+
+    # 문의 섹션·양식·허니팟·수집 안내·처리방침 링크 검사
+    if not re.search(r'<button\b[^>]*id=["\']copy-email["\']', contact_html) or not re.search(
+        r'<[^>]*id=["\']copy-status["\'](?=[^>]*role=["\']status["\'])[^>]*aria-live=["\']polite["\']|<[^>]*id=["\']copy-status["\'](?=[^>]*aria-live=["\']polite["\'])[^>]*role=["\']status["\']',
+        contact_html,
+    ):
+        errors.append("주소 복사/알림 누락")
+
+    if not re.search(r'<a\b[^>]*\bhref=["\']privacy\.html["\']', contact_html):
+        errors.append("문의 섹션 privacy.html 링크 누락")
+    if not re.search(r'<a\b[^>]*\bhref=["\']privacy\.html["\']', footer_html):
+        errors.append("바닥글 privacy.html 링크 누락")
+
+    note_match = re.search(r'<div\b[^>]*\bclass=["\'][^"\']*\bcollection-note\b[^"\']*["\'][^>]*>(.*?)</div>', contact_html, re.S | re.I)
+    form_match = re.search(r'<form\b[^>]*\bid=["\']contact-form["\'][^>]*>(.*?)</form>', contact_html, re.S | re.I)
+    if not note_match or not form_match or note_match.start() > form_match.start():
+        errors.append("수집 안내 누락 또는 양식 위 배치 위반")
+    else:
+        note_html = note_match.group(1)
+        if not all(
+            token in note_html
+            for token in (
+                "이메일 주소",
+                "문의 내용",
+                "답장",
+                "답변 완료 후 1년",
+                "지체 없이 삭제",
+                "국외 이전",
+                "Cloudflare",
+                'href="privacy.html"',
+            )
+        ):
+            errors.append("수집 안내 필수 항목(항목·목적·보유 1년·국외 이전·처리방침 링크) 누락")
+
+    fallback_match = re.search(r'<div\b[^>]*\bid=["\']contact-fallback["\'][^>]*>(.*?)</div>\s*<form\b', contact_html, re.S | re.I)
+    if not fallback_match:
+        fallback_match = re.search(r'<div\b[^>]*\bid=["\']contact-fallback["\'][^>]*>(.*?)</div>', contact_html, re.S | re.I)
+    if not fallback_match or 'href="mailto:2min@1min.dev"' not in contact_html:
+        errors.append("자리표시 키 대체 안내 영역 누락")
+    else:
+        fallback_inner = fallback_match.group(1)
+        if (
+            "mailto:2min@1min.dev" in fallback_inner
+            or re.search(r"<button\b", fallback_inner, re.I)
+            or "fallback-copy" in html_content
+        ):
+            errors.append("자리표시 키 대체 안내 이메일·복사 버튼 중복 노출")
+
+    form_html = form_match.group(1) if form_match else ""
+    if not (
+        re.search(r'<label\b[^>]*\bfor=["\']contact-email["\'][^>]*>', form_html)
+        and re.search(
+            r'<input\b(?=[^>]*\bid=["\']contact-email["\'])(?=[^>]*\bname=["\']email["\'])(?=[^>]*\btype=["\']email["\'])(?=[^>]*\brequired\b)[^>]*>',
+            form_html,
+        )
+    ):
+        errors.append("양식 이메일 라벨 연결 또는 필수 속성 누락")
+
+    if not (
+        re.search(r'<label\b[^>]*\bfor=["\']contact-message["\'][^>]*>', form_html)
+        and re.search(
+            r'<textarea\b(?=[^>]*\bid=["\']contact-message["\'])(?=[^>]*\bname=["\']message["\'])(?=[^>]*\bmaxlength=["\']4000["\'])(?=[^>]*\brequired\b)[^>]*>',
+            form_html,
+        )
+        and re.search(r'id=["\']character-count["\'][^>]*>\s*0\s*/\s*4000자\s*</', form_html)
+    ):
+        errors.append("양식 내용 라벨·4000자 제한·글자 수 표시 누락")
+
+    honeypot_box = re.search(
+        r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bhoneypot\b[^"\']*["\'])(?=[^>]*\baria-hidden=["\']true["\'])(?=[^>]*\bhidden\b)[^>]*>(.*?)</div>',
+        form_html,
+        re.S | re.I,
+    )
+    if (
+        not honeypot_box
+        or not re.search(r'<label\b[^>]*\bfor=["\']contact-website["\']', honeypot_box.group(1))
+        or not re.search(
+            r'<input\b(?=[^>]*\bid=["\']contact-website["\'])(?=[^>]*\bname=["\']website["\'])(?=[^>]*\btabindex=["\']-1["\'])(?=[^>]*\bautocomplete=["\']off["\'])[^>]*>',
+            honeypot_box.group(1),
+        )
+        or not re.search(r"\.honeypot\s*\{[^}]*display\s*:\s*none\s*!important", html_content)
+    ):
+        errors.append("허니팟 숨김 또는 속성(aria-hidden·hidden·tabindex·autocomplete) 누락")
+
+    if not re.search(r'<input\b(?=[^>]*\bname=["\']startedAt["\'])(?=[^>]*\btype=["\']hidden["\'])[^>]*>', form_html):
+        errors.append("startedAt 필드 누락")
+
+    if not re.search(r'<div\b(?=[^>]*\bclass=["\'][^"\']*\bcf-turnstile\b[^"\']*["\'])(?=[^>]*\bdata-sitekey=["\']TURNSTILE_SITE_KEY["\'])[^>]*>', form_html):
+        errors.append("Turnstile 위젯 또는 자리표시 data-sitekey 누락")
+
+    if (
+        "https://challenges.cloudflare.com/turnstile/v0/api.js" not in html_content
+        or "async" not in html_content
+        or "defer" not in html_content
+        or "https://contact.1min.dev/api/contact" not in html_content
+    ):
+        errors.append("Turnstile 스크립트(async/defer) 또는 Worker 요청 주소 누락")
+
+    consent_label_match = re.search(r'<label\b[^>]*\bfor=["\']contact-consent["\'][^>]*>(.*?)</label>', form_html, re.S | re.I)
+    consent_label_text = (
+        re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", consent_label_match.group(1))).strip()
+        if consent_label_match
+        else ""
+    )
+    if not (
+        consent_label_match
+        and all(token in consent_label_text for token in ("개인정보 수집·이용", "국외 이전", "Cloudflare"))
+        and re.search(
+            r'<input\b(?=[^>]*\bid=["\']contact-consent["\'])(?=[^>]*\btype=["\']checkbox["\'])(?=[^>]*\brequired\b)[^>]*>',
+            form_html,
+        )
+    ):
+        errors.append("필수 동의 체크박스·국외 이전(Cloudflare) 문구 또는 라벨 연결 누락")
+
+    if not re.search(r'<[^>]*\bid=["\']form-status["\'][^>]*\baria-live=["\']polite["\']', form_html) or not re.search(
+        r'<[^>]*\bid=["\']form-fallback["\'][^>]*>.*?mailto:2min@1min\.dev',
+        form_html,
+        re.S,
+    ):
+        errors.append("양식 aria-live 상태 안내 또는 실패 시 메일 대체 안내 누락")
+
+    if "innerHTML" in html_content:
+        errors.append("innerHTML 사용 금지 위반")
+
     if not re.search(r"@media\s*\(prefers-reduced-motion:\s*reduce\)", html_content):
         errors.append("모션 감소 CSS 누락")
-    for term in ("Polishing", "발전실적", "연료관리", "일일집계", "작업허가서", "실결재자", "MOOC", "롤백 스크립트", "테스트 포트", "발전소", "고객사"):
+    for term in (
+        "Polishing",
+        "발전실적",
+        "연료관리",
+        "일일집계",
+        "작업허가서",
+        "실결재자",
+        "MOOC",
+        "롤백 스크립트",
+        "테스트 포트",
+        "발전소",
+        "고객사",
+        *DRAFT_FORBIDDEN_TERMS,
+    ):
         if term in html_content:
             errors.append(f"금지 문구: {term}")
+    return errors
+
+
+def validate_privacy_markup(privacy_html: str) -> list[str]:
+    """Check privacy.html finalized retention, overseas transfer, official Cloudflare links, and absence of draft markers."""
+    errors = []
+    for token in (
+        "홈페이지 개인정보처리방침",
+        "2026-10-30",
+        "일민형 (1min)",
+        "2min@1min.dev",
+        "답변 완료 후 1년",
+        "지체 없이",
+        "삭제",
+        "Cloudflare, Inc.(미국)",
+        "미국 등 Cloudflare 데이터센터 소재국",
+        "이메일 주소, 문의 내용, 접속 IP, 보안 확인 토큰",
+        "양식 제출 때 네트워크로 전송",
+        "봇 확인(Turnstile)과 메일 전달(Workers·Email)",
+        "전달 처리 후 Cloudflare 정책에 따름",
+        "동의하지 않으면 양식 대신 이메일로 직접 문의할 수 있음",
+        "https://www.cloudflare.com/privacypolicy/",
+        "https://developers.cloudflare.com/turnstile/",
+        "https://www.cloudflare.com/cloudflare-customer-dpa/",
+        'href="index.html"',
+    ):
+        if token not in privacy_html:
+            errors.append(f"필수 문구/링크 누락: {token}")
+    for term in DRAFT_FORBIDDEN_TERMS:
+        if term in privacy_html:
+            errors.append(f"초안 문구 잔존: {term}")
+    if re.search(r"https?://(?:fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com)", privacy_html, re.I):
+        errors.append("외부 CDN 글꼴 참조 발견")
+    privacy_parser = SiteHTMLParser()
+    privacy_parser.feed(privacy_html)
+    for href, _ in privacy_parser.anchors:
+        if href.startswith(("http://", "https://")) and not href.startswith(
+            ("https://www.cloudflare.com/", "https://developers.cloudflare.com/")
+        ):
+            errors.append(f"비공식 외부 링크 발견: {href}")
     return errors
 
 
@@ -249,12 +503,12 @@ def run_static_checks() -> tuple[int, int]:
         print("✅ [통과] HTML 내 ID 중복 없음")
         passed += 1
 
-    # 최상위 7개 섹션 순서 확인
-    if parser.sections[:7] == EXPECTED_SECTIONS:
-        print(f"✅ [통과] 7개 섹션 순서 일치: {EXPECTED_SECTIONS}")
+    # 최상위 섹션 순서 확인
+    if parser.sections == EXPECTED_SECTIONS:
+        print(f"✅ [통과] {len(EXPECTED_SECTIONS)}개 섹션 순서 일치: {EXPECTED_SECTIONS}")
         passed += 1
     else:
-        print(f"❌ [실패] 섹션 순서 불일치: 기대={EXPECTED_SECTIONS}, 실제={parser.sections[:7]}")
+        print(f"❌ [실패] 섹션 순서 불일치: 기대={EXPECTED_SECTIONS}, 실제={parser.sections}")
         failed += 1
 
     # 목차 nav 링크와 섹션 ID 연결 확인
@@ -448,6 +702,38 @@ def run_static_checks() -> tuple[int, int]:
     else:
         print("✅ [통과] 확정 경력((주)아이티맨, (주)에이스퀘어) 및 교육(스마트인재개발원) 분리 반영 확인")
         passed += 1
+
+    # 15. 루트 홈페이지 개인정보처리방침(privacy.html) 존재 및 필수 항목 검사
+    privacy_path = WORKSPACE_DIR / "privacy.html"
+    if not privacy_path.is_file():
+        print("❌ [실패] 루트 privacy.html 파일이 존재하지 않습니다.")
+        failed += 1
+    else:
+        privacy_html = privacy_path.read_text(encoding="utf-8")
+        privacy_errors = validate_privacy_markup(privacy_html)
+        if privacy_errors:
+            print(f"❌ [실패] 루트 privacy.html 요건 불일치: {privacy_errors}")
+            failed += 1
+        else:
+            print("✅ [통과] 루트 privacy.html 존재 및 시행일·보유 1년·국외 이전·Cloudflare 공식 문서 링크 확인")
+            passed += 1
+
+    # 16. 공개 파일(index.html, privacy.html) 초안 문구 미포함 검사
+    draft_hits = []
+    for pub_rel in ("index.html", "privacy.html"):
+        pub_path = WORKSPACE_DIR / pub_rel
+        if pub_path.is_file():
+            pub_text = pub_path.read_text(encoding="utf-8")
+            for term in DRAFT_FORBIDDEN_TERMS:
+                if term in pub_text:
+                    draft_hits.append(f"{pub_rel}: {term}")
+    if draft_hits:
+        print(f"❌ [실패] 공개 파일 내 초안 문구 잔존: {draft_hits}")
+        failed += 1
+    else:
+        print("✅ [통과] 공개 파일(index.html, privacy.html) 초안 문구 미포함 확인")
+        passed += 1
+
     print(f"=== 정적 검증 완료: 통과 {passed}, 실패 {failed} ===")
     return passed, failed
 
@@ -659,34 +945,36 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         print(f"❌ [실패] 광양감동체 적용 대상 오류: 표제={gwangyang_elem_font}, 누출요소={other_gwangyang_elements}")
                         failed += 1
 
-                    keyboard_nav_ok = page.evaluate("""(() => {
-                        const links = document.querySelectorAll('a');
-                        return links.length > 0;
-                    })()""")
-                    page.keyboard.press("Tab")
-                    first_focus = page.evaluate("document.activeElement.tagName")
-                    page.keyboard.press("Tab")
-                    second_focus = page.evaluate("document.activeElement.tagName")
-                    if keyboard_nav_ok and first_focus == "A" and second_focus == "A":
-                        print("✅ [통과] 키보드 Tab 포커스 정상 작동 확인")
+                    focus_steps = []
+                    for expected in ("#contact .contact-mail", "button#copy-email"):
+                        page.keyboard.press("Tab")
+                        focus_steps.append(page.evaluate("""(expected) => {
+                            const el = document.activeElement;
+                            const s = getComputedStyle(el);
+                            return {
+                                expected,
+                                actual: el.tagName + (el.id ? '#' + el.id : '') + (el.className ? '.' + String(el.className).trim().replaceAll(' ', '.') : ''),
+                                matches: el === document.querySelector(expected),
+                                width: parseFloat(s.outlineWidth),
+                                style: s.outlineStyle,
+                                offset: parseFloat(s.outlineOffset)
+                            };
+                        }""", expected))
+                    if all(step["matches"] for step in focus_steps):
+                        print("✅ [통과] 연락 링크 → 주소 복사 버튼 Tab 포커스 순서 확인")
                         passed += 1
                     else:
-                        print(f"❌ [실패] 키보드 포커스 오류 (focus1={first_focus}, focus2={second_focus})")
+                        print(f"❌ [실패] 키보드 포커스 순서 오류: {focus_steps}")
                         failed += 1
 
-                    focus_style = page.evaluate("""(() => {
-                        const el = document.activeElement;
-                        const s = getComputedStyle(el);
-                        return {width: parseFloat(s.outlineWidth), style: s.outlineStyle, offset: parseFloat(s.outlineOffset)};
-                    })()""")
-                    if focus_style["width"] >= 2 and focus_style["style"] != "none" and focus_style["offset"] >= 3:
-                        print("✅ [통과] 키보드 포커스 링 표시 확인")
+                    if all(step["width"] >= 2 and step["style"] != "none" and step["offset"] >= 3 for step in focus_steps):
+                        print("✅ [통과] 연락 링크와 복사 버튼의 키보드 포커스 링 확인")
                         passed += 1
                     else:
-                        print(f"❌ [실패] 키보드 포커스 링 미흡: {focus_style}")
+                        print(f"❌ [실패] 키보드 포커스 링 미흡: {focus_steps}")
                         failed += 1
 
-                    copy_button = page.locator('#contact button').first
+                    copy_button = page.locator('#copy-email')
                     if copy_button.count():
                         copy_button.click()
                         try:
@@ -698,6 +986,50 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                             failed += 1
                     else:
                         print("❌ [실패] 이메일 복사 버튼 누락")
+                        failed += 1
+
+                    contact_state = page.evaluate("""(() => {
+                        const contact = document.getElementById('contact');
+                        const fallback = document.getElementById('contact-fallback');
+                        const form = document.getElementById('contact-form');
+                        const honeypotBox = document.querySelector('#contact-form .honeypot');
+                        const honeypotInput = document.getElementById('contact-website');
+                        const isVisible = el => Boolean(el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+                        const visibleMailCount = contact ? [...contact.querySelectorAll('a[href="mailto:2min@1min.dev"]')].filter(isVisible).length : 0;
+                        const visibleCopyCount = contact ? [...contact.querySelectorAll('button')].filter(isVisible).length : 0;
+                        return {
+                            fallbackVisible: Boolean(fallback && !fallback.hidden && getComputedStyle(fallback).display !== 'none' && fallback.getClientRects().length > 0),
+                            visibleMailCount,
+                            visibleCopyCount,
+                            formHidden: Boolean(form && form.hidden && getComputedStyle(form).display === 'none'),
+                            honeypotHidden: Boolean(
+                                honeypotBox &&
+                                honeypotBox.hidden &&
+                                honeypotBox.getAttribute('aria-hidden') === 'true' &&
+                                getComputedStyle(honeypotBox).display === 'none' &&
+                                honeypotInput &&
+                                honeypotInput.tabIndex === -1 &&
+                                honeypotInput.getAttribute('autocomplete') === 'off'
+                            ),
+                        };
+                    })()""")
+                    if (
+                        contact_state["fallbackVisible"]
+                        and contact_state["visibleMailCount"] == 1
+                        and contact_state["visibleCopyCount"] == 1
+                        and contact_state["formHidden"]
+                    ):
+                        print("✅ [통과] 자리표시 Turnstile 키 상태에서 대체 안내 노출 및 이메일·복사 버튼 단일 노출 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 자리표시 Turnstile 키 대체 안내 또는 단일 노출 오류: {contact_state}")
+                        failed += 1
+
+                    if contact_state["honeypotHidden"]:
+                        print("✅ [통과] 허니팟 필드 화면·보조기기 숨김 및 포커스 제외 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 허니팟 필드 숨김 상태 미흡: {contact_state}")
                         failed += 1
 
                 if tc["width"] in (1280, 390):
@@ -716,7 +1048,7 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                             return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
                         };
                         const issues = [];
-                        for (const el of document.querySelectorAll('p, h1, h2, h3, a, button, li, dt, dd')) {
+                        for (const el of document.querySelectorAll('p, h1, h2, h3, a, button, li, dt, dd, label, output, span, strong')) {
                             if (!el.textContent.trim() || !el.getClientRects().length) continue;
                             const fg = parse(getComputedStyle(el).color);
                             let bg = null;
