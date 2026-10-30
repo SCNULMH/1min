@@ -375,7 +375,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         "https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual",
         "intoss://zerolanguage",
         "https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb",
-        "https://bw-jeju.duckdns.org",
+        "https://bw-jeju.1min.dev",
         "mailto:2min@1min.dev",
         "#en",
         "privacy.html",

@@ -29,7 +29,7 @@ VALID_LANDING = """
 </section>
 <section id="featured-works"><article id="work-zerolingual"></article>
 <article id="work-newbie">출시 준비 중</article></section>
-<section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.duckdns.org">서비스 방문하기</a><img src="assets/idigdi-main.webp"></article>
+<section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.1min.dev">서비스 방문하기</a><img src="assets/idigdi-main.webp"></article>
 <ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong>내일이음</strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
 <section id="experience"><article><span class="period">2026</span><div><h3>공공데이터·AI 활용 공모전 출품</h3><p>이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발</p></div></article></section>
 <section id="company">
@@ -58,7 +58,7 @@ VALID_LANDING = """
 <a href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual">Play</a>
 <a href="intoss://zerolanguage">Toss</a>
 <a href="https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb">Newbie</a>
-<a href="https://bw-jeju.duckdns.org">Idigdi</a>
+<a href="https://bw-jeju.1min.dev">Idigdi</a>
 <style>.honeypot { display: none !important; } @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms; } }</style>
 <script>
 const s = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
