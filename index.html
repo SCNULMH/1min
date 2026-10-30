@@ -43,19 +43,34 @@ h1{font-size:clamp(38px,6.4vw,76px);line-height:1.16;letter-spacing:-.055em;font
 .work-icon{width:48px;height:48px;object-fit:contain}.status{border:1px solid var(--rule);padding:3px 9px;color:var(--ink-2);font-size:12px;font-weight:600;white-space:nowrap}.status.live{color:var(--seal-text);border-color:var(--seal-text)}
 .work-lines{margin:0 0 22px}.work-lines div{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule)}.work-lines dt{font-weight:600;color:var(--ink-2)}.work-lines dd{margin:0}
 .work-links .button{font-size:14px}.work-links .text-link{min-height:44px;display:inline-flex;align-items:center;font-size:14px}
-.gallery{display:grid;gap:8px;align-content:start}.gallery figure{margin:0;min-width:0}.gallery img{display:block;width:100%;height:auto;border:1px solid var(--rule);background:var(--paper-2)}.gallery figcaption{font-size:12px;color:var(--ink-2);margin-top:5px}
+.gallery{display:grid;gap:8px;align-content:start}.gallery figure{margin:0;min-width:0}.gallery-item{display:block;width:100%;margin:0;padding:0;border:0;background:transparent;color:inherit;cursor:zoom-in;appearance:none}.gallery img{display:block;width:100%;height:auto;border:1px solid var(--rule);background:var(--paper-2)}.gallery figcaption{font-size:12px;color:var(--ink-2);margin-top:5px}
 .app-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.newbie-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
 .simple-list{border-top:1px solid var(--rule)}.simple-list article{display:grid;grid-template-columns:minmax(170px,.4fr) 1fr;gap:20px;padding:22px 0;border-bottom:1px solid var(--rule)}.simple-list h3{font-size:19px;margin:0}.simple-list p{color:var(--ink-2);margin:0}
-.other-work-link{min-height:44px;display:inline-flex;align-items:center;font-size:14px}.other-work-image{display:block;width:min(100%,360px);height:auto;margin-top:16px;border:1px solid var(--rule)}
+.other-work-link{min-height:44px;display:inline-flex;align-items:center;font-size:14px}.other-work-image{display:block;width:min(100%,360px);height:auto;margin-top:16px;border:1px solid var(--rule)}.other-gallery{width:min(100%,360px);margin-top:16px}.other-gallery .other-work-image{width:100%;margin-top:0}
+body.lightbox-open{overflow:hidden}
+.lightbox{inset:0;margin:0;border:0;padding:20px;max-width:none;max-height:none;width:100%;height:100%;background:transparent;color:var(--ink)}
+.lightbox[open]{display:flex;align-items:center;justify-content:center}
+.lightbox::backdrop{background:color-mix(in srgb,var(--ink) 78%,transparent)}
+@media(prefers-color-scheme:dark){.lightbox::backdrop{background:color-mix(in srgb,var(--paper) 82%,transparent)}}
+@keyframes lightbox-in{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.lightbox-panel{background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:16px;width:min(100%,920px);max-height:calc(100dvh - 40px);display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px;animation:lightbox-in 200ms var(--ease-out)}
+.lightbox-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lightbox-count{margin:0;color:var(--ink-2);font-size:14px;font-variant-numeric:tabular-nums}
+.lightbox-body{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;justify-items:center;gap:12px;min-height:0;touch-action:pan-y}
+.lightbox-body.single{grid-template-columns:minmax(0,1fr)}
+.lightbox-image{display:block;min-width:0;min-height:0;max-width:100%;max-height:calc(100dvh - 190px);width:auto;height:auto;object-fit:contain;border:1px solid var(--rule);background:var(--paper-2)}
+.lightbox-caption{margin:0;text-align:center;color:var(--ink-2);font-size:14px}
+.lightbox .button{min-width:46px;min-height:46px;padding:8px 14px;font-size:14px}
+.lightbox-nav[hidden]{display:none!important}
 .contest-list{list-style:decimal-leading-zero;padding-left:34px;margin:32px 0 0;border-top:1px solid var(--rule)}.contest-list li{padding:16px 0 16px 4px;border-bottom:1px solid var(--rule);color:var(--ink-2);font-size:14px}.contest-list li::marker{color:var(--ink-3);font-size:13px}.contest-list strong{color:var(--ink);font-weight:600}
 .contest-list a{display:inline-flex;align-items:center;min-height:44px;margin:-14px 0;color:inherit;text-underline-offset:3px}
 .timeline{border-top:1px solid var(--rule)}.timeline article{display:grid;grid-template-columns:220px 1fr;gap:22px;padding:22px 0;border-bottom:1px solid var(--rule)}.timeline .period{color:var(--ink-2);font-size:14px;font-variant-numeric:tabular-nums}.timeline h3{font-size:18px;margin:0 0 6px}.timeline p{margin:0;color:var(--ink-2)}.subheading{font-size:16px;margin:32px 0 12px}
 .company-info{border-top:1px solid var(--rule);margin:0}.company-info div{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid var(--rule)}.company-info dt{font-weight:600;color:var(--ink-2)}.company-info dd{margin:0}.contact-actions{align-items:center}.contact-actions .button{font-size:13px;padding:8px 14px;min-height:44px}.contact-mail{display:inline-flex;align-items:center;min-width:44px;min-height:44px;font-weight:600}.copy-status{min-height:1.5em;margin:6px 0 0;color:var(--ink-2);font-size:13px}
 footer{padding:40px 0 52px;color:var(--ink-2);font-size:13px}footer a{min-height:44px;display:inline-flex;align-items:center}footer ul{list-style:none;display:flex;gap:0 22px;flex-wrap:wrap;padding:0;margin:0 0 18px}footer p{margin:0 0 8px}#en{border-top:1px solid var(--rule);padding-top:20px;margin-top:20px}#en p{max-width:680px}
 @media(max-width:959px){.section-heading{grid-template-columns:1fr;gap:8px;margin-bottom:30px}.section-body{margin-left:0}.work{grid-template-columns:minmax(0,1fr) minmax(220px,.75fr)}}
-@media(max-width:719px){.header-inner{align-items:flex-start;flex-direction:column;gap:0;padding:12px 0}.site-nav{width:100%;justify-content:space-between;gap:0 12px}.site-nav a{font-size:13px}main>section{padding:55px 0}#hero{padding:72px 0 65px}.hero-layout,.contact-layout{grid-template-columns:1fr}.hero-preview{margin-top:20px}.contact-layout{gap:28px}.work{grid-template-columns:1fr;gap:24px}.timeline article{grid-template-columns:1fr;gap:4px}.simple-list article{grid-template-columns:1fr;gap:6px}}
+@media(max-width:719px){.header-inner{align-items:flex-start;flex-direction:column;gap:0;padding:12px 0}.site-nav{width:100%;justify-content:space-between;gap:0 12px}.site-nav a{font-size:13px}main>section{padding:55px 0}#hero{padding:72px 0 65px}.hero-layout,.contact-layout{grid-template-columns:1fr}.hero-preview{margin-top:20px}.contact-layout{gap:28px}.work{grid-template-columns:1fr;gap:24px}.timeline article{grid-template-columns:1fr;gap:4px}.simple-list article{grid-template-columns:1fr;gap:6px}.lightbox{padding:12px}.lightbox-panel{padding:12px;gap:10px;max-height:calc(100dvh - 24px)}.lightbox-body{grid-template-columns:1fr 1fr;gap:8px}.lightbox-body.single{grid-template-columns:minmax(0,1fr)}.lightbox-image{grid-column:1/-1;order:-1;max-height:calc(100dvh - 230px)}.lightbox-nav{width:100%}}
 @media(max-width:480px){.wrap{width:min(100% - 32px,1120px)}.site-nav{justify-content:flex-start;column-gap:16px}.site-nav a{min-width:44px;justify-content:center;font-size:12px}.work-lines div{grid-template-columns:1fr;gap:2px}.company-info div{grid-template-columns:116px 1fr;gap:10px}.app-gallery{gap:5px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.lightbox-panel{animation:none!important}}
 </style>
 </head>
 <body>
@@ -64,16 +79,116 @@ footer{padding:40px 0 52px;color:var(--ink-2);font-size:13px}footer a{min-height
 <main>
 <section id="hero" aria-labelledby="hero-title"><div class="wrap hero-layout"><div><p class="eyebrow">ILMINHYEONG · 1MIN</p><h1 id="hero-title">작은 불편을<br><span>쓰이는 제품으로.</span></h1><p class="hero-summary">일민형은 일상의 문제를 웹과 앱으로 풀어내는 1인 소프트웨어 회사입니다.<br>이민형이 직접 만들고 다듬습니다.</p><div class="actions"><a class="button primary" href="#featured-works">대표 작업 보기</a><a class="button" href="#contact">문의하기</a></div></div><aside class="hero-preview" aria-label="대표 작업 미리보기"><p class="eyebrow">지금 만드는 것</p><a href="#work-zerolingual"><strong>0개국어</strong><span>Google Play · 앱인토스 출시</span></a><a href="#work-newbie"><strong>신입 이사원</strong><span>출시 준비 중</span></a></aside></div></section>
 <section id="featured-works" aria-labelledby="featured-title"><div class="wrap"><div class="section-heading"><p class="eyebrow">SELECTED WORK</p><h2 id="featured-title">대표 작업</h2></div><div class="section-body">
-<article class="work" id="work-zerolingual" aria-labelledby="zerolingual-title"><div><div class="work-head"><img class="work-icon" src="assets/symbol-color.svg" alt="0개국어 앱 심볼" width="48" height="48"><h3 class="font-gwangyang" id="zerolingual-title">0개국어</h3><span class="status live">출시</span></div><dl class="work-lines"><div><dt>문제</dt><dd>신조어와 잘못된 표현으로 대화에 오해가 생깁니다.</dd></div><div><dt>만든 것</dt><dd>일상 표현을 표준 어휘로 익히고 간격 반복으로 복습하는 모바일 앱.</dd></div><div><dt>결과</dt><dd>Google Play와 토스 앱인토스 출시. 회원가입 없이 바로 사용하고 학습 기록은 기기에 저장됩니다.</dd></div></dl><div class="work-links"><a class="button primary" href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual" target="_blank" rel="noopener noreferrer">Google Play 보기</a><a class="button" href="intoss://zerolanguage">앱인토스 열기</a></div></div><div class="gallery app-gallery"><figure><img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면" width="540" height="960" loading="lazy"><figcaption>오늘의 단어</figcaption></figure><figure><img src="assets/card.webp" alt="0개국어 어휘 카드 화면" width="540" height="960" loading="lazy"><figcaption>어휘 카드</figcaption></figure><figure><img src="assets/quiz.webp" alt="0개국어 복습 퀴즈 화면" width="540" height="960" loading="lazy"><figcaption>복습 퀴즈</figcaption></figure></div></article>
-<article class="work" id="work-newbie" aria-labelledby="newbie-title"><div><div class="work-head"><h3 id="newbie-title">신입 이사원</h3><span class="status">출시 준비 중</span></div><dl class="work-lines"><div><dt>문제</dt><dd>신입 사원이 필요한 식단, 자리, 할 일이 여러 곳에 흩어져 있습니다.</dd></div><div><dt>만든 것</dt><dd>할 일, 식단 사진 OCR, 자리 배치와 모임을 한곳에 모은 모바일 앱.</dd></div><div><dt>결과</dt><dd>핵심 화면과 Supabase 연동을 구현하고 출시를 준비하고 있습니다.</dd></div></dl><div class="work-links"><a class="button" href="https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb" target="_blank" rel="noopener noreferrer">앱 소개 보기</a></div></div><div class="gallery newbie-gallery"><figure><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면" width="675" height="1200" loading="lazy"><figcaption>홈 대시보드 · 예시 데이터</figcaption></figure><figure><img src="assets/newbie-life.webp" alt="신입 이사원 식단과 생활 예시 화면" width="675" height="1200" loading="lazy"><figcaption>생활과 식단 · 예시 데이터</figcaption></figure></div></article>
+<article class="work" id="work-zerolingual" aria-labelledby="zerolingual-title"><div><div class="work-head"><img class="work-icon" src="assets/symbol-color.svg" alt="0개국어 앱 심볼" width="48" height="48"><h3 class="font-gwangyang" id="zerolingual-title">0개국어</h3><span class="status live">출시</span></div><dl class="work-lines"><div><dt>문제</dt><dd>신조어와 잘못된 표현으로 대화에 오해가 생깁니다.</dd></div><div><dt>만든 것</dt><dd>일상 표현을 표준 어휘로 익히고 간격 반복으로 복습하는 모바일 앱.</dd></div><div><dt>결과</dt><dd>Google Play와 토스 앱인토스 출시. 회원가입 없이 바로 사용하고 학습 기록은 기기에 저장됩니다.</dd></div></dl><div class="work-links"><a class="button primary" href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual" target="_blank" rel="noopener noreferrer">Google Play 보기</a><a class="button" href="intoss://zerolanguage">앱인토스 열기</a></div></div><div class="gallery app-gallery"><figure><button class="gallery-item" type="button" aria-label="0개국어 오늘의 단어 학습 화면 크게 보기"><img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면" width="540" height="960" loading="lazy"></button><figcaption>오늘의 단어</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="0개국어 어휘 카드 화면 크게 보기"><img src="assets/card.webp" alt="0개국어 어휘 카드 화면" width="540" height="960" loading="lazy"></button><figcaption>어휘 카드</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="0개국어 복습 퀴즈 화면 크게 보기"><img src="assets/quiz.webp" alt="0개국어 복습 퀴즈 화면" width="540" height="960" loading="lazy"></button><figcaption>복습 퀴즈</figcaption></figure></div></article>
+<article class="work" id="work-newbie" aria-labelledby="newbie-title"><div><div class="work-head"><h3 id="newbie-title">신입 이사원</h3><span class="status">출시 준비 중</span></div><dl class="work-lines"><div><dt>문제</dt><dd>신입 사원이 필요한 식단, 자리, 할 일이 여러 곳에 흩어져 있습니다.</dd></div><div><dt>만든 것</dt><dd>할 일, 식단 사진 OCR, 자리 배치와 모임을 한곳에 모은 모바일 앱.</dd></div><div><dt>결과</dt><dd>핵심 화면과 Supabase 연동을 구현하고 출시를 준비하고 있습니다.</dd></div></dl><div class="work-links"><a class="button" href="https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb" target="_blank" rel="noopener noreferrer">앱 소개 보기</a></div></div><div class="gallery newbie-gallery"><figure><button class="gallery-item" type="button" aria-label="신입 이사원 홈 대시보드 예시 화면 크게 보기"><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면" width="675" height="1200" loading="lazy"></button><figcaption>홈 대시보드 · 예시 데이터</figcaption></figure><figure><button class="gallery-item" type="button" aria-label="신입 이사원 식단과 생활 예시 화면 크게 보기"><img src="assets/newbie-life.webp" alt="신입 이사원 식단과 생활 예시 화면" width="675" height="1200" loading="lazy"></button><figcaption>생활과 식단 · 예시 데이터</figcaption></figure></div></article>
 </div></div></section>
-<section id="other-projects" aria-labelledby="other-title"><div class="wrap"><div class="section-heading"><p class="eyebrow">MORE WORK</p><h2 id="other-title">그 밖의 프로젝트</h2></div><div class="section-body"><div class="simple-list"><article id="work-idigdi" aria-labelledby="idigdi-title"><h3 id="idigdi-title">이디그디</h3><div><p>사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.</p><p>2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.</p><a class="other-work-link" href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><img class="other-work-image" src="assets/idigdi-main.webp" alt="이디그디 사진 업로드와 조건 선택 화면" width="1200" height="750" loading="lazy"></div></article></div><ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">내일이음</a></strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></div></div></section>
+<section id="other-projects" aria-labelledby="other-title"><div class="wrap"><div class="section-heading"><p class="eyebrow">MORE WORK</p><h2 id="other-title">그 밖의 프로젝트</h2></div><div class="section-body"><div class="simple-list"><article id="work-idigdi" aria-labelledby="idigdi-title"><h3 id="idigdi-title">이디그디</h3><div><p>사진과 닮은 제주 명소를 추천하고 일정과 지도를 연결하는 웹 서비스. 공개 서비스로 운영하고 있습니다.</p><p>2026 관광데이터 활용 공모전 기능설명서에 이디그디로 기록했습니다.</p><a class="other-work-link" href="https://bw-jeju.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="이디그디 사진 업로드와 조건 선택 화면 크게 보기"><img class="other-work-image" src="assets/idigdi-main.webp" alt="이디그디 사진 업로드와 조건 선택 화면" width="1200" height="750" loading="lazy"></button></figure></div></div></article><article id="work-naeil" aria-labelledby="naeil-title"><h3 id="naeil-title">내일이음</h3><div><p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p><a class="other-work-link" href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="내일이음 첫 화면 크게 보기"><img class="other-work-image" src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"></button></figure></div></div></article></div><ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">내일이음</a></strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></div></div></section>
 <section id="experience" aria-labelledby="experience-title"><div class="wrap"><div class="section-heading"><p class="eyebrow">EXPERIENCE</p><h2 id="experience-title">경력 및 교육</h2></div><div class="section-body"><div class="timeline"><article><span class="period">2026.10 ~ 현재</span><div><h3>일민형 (1min) · 대표 / 소프트웨어 개발</h3><p>1인 소프트웨어 회사를 설립하고 앱과 웹 서비스를 개발·운영합니다.</p></div></article><article><span class="period">2025.06.16 ~ 현재</span><div><h3>(주)아이티맨</h3><p>업무 시스템 기능 개선<br>교육 서비스 유지보수·보안 점검</p></div></article><article><span class="period">2026</span><div><h3>공공데이터·AI 활용 공모전 출품</h3><p>이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발</p></div></article><article><span class="period">2023.12 ~ 2024.01</span><div><h3>(주)에이스퀘어 · 현장실습생</h3></div></article></div><h3 class="subheading">교육</h3><div class="timeline"><article><span class="period">2024.10.07 ~ 2025.04.04</span><div><h3>스마트인재개발원 · DCX 개발자 과정</h3><p>수료</p></div></article></div></div></div></section>
 <section id="company" aria-labelledby="company-title"><div class="wrap"><div class="section-heading"><p class="eyebrow">ABOUT 1MIN</p><h2 id="company-title">회사</h2></div><div class="section-body"><p>업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.</p><ul class="company-intro"><li>최적화된 서비스를 만들어내는 개발자</li><li>경험을 통해 성장해 나가는 개발자</li><li>사람들의 불편함 속에서 필요로 하는 것을 고민하는 개발자</li></ul><h3 class="subheading">회사 정보</h3><dl class="company-info"><div><dt>상호</dt><dd>일민형 (1min)</dd></div><div><dt>대표자</dt><dd>이민형</dd></div><div><dt>사업자등록번호</dt><dd>114-40-01468</dd></div><div><dt>업종</dt><dd>응용 소프트웨어 개발 및 공급</dd></div><div><dt>소재지</dt><dd>전라남도 나주시</dd></div><div><dt>설립</dt><dd>2026년 10월</dd></div></dl></div></div></section>
 <section id="contact" aria-labelledby="contact-title"><div class="wrap"><div class="section-heading"><p class="eyebrow">CONTACT</p><h2 id="contact-title">문의</h2></div><div class="section-body contact-layout"><div class="contact-direct"><p>제품이나 협업에 관한 이야기를 보내 주세요.</p><div class="contact-actions"><a class="contact-mail" href="mailto:2min@1min.dev">2min@1min.dev</a><button class="button" id="copy-email" type="button">주소 복사</button></div><p class="copy-status" id="copy-status" role="status" aria-live="polite"></p></div><div><div class="collection-note"><p><strong>수집 안내</strong> · 항목: 이메일 주소, 문의 내용(제출 시 접속 IP·보안 확인 토큰) / 목적: 문의 처리와 답장 / 보유 기간: 답변 완료 후 1년(이후 지체 없이 삭제)</p><p>국외 이전: 양식 제출 시 Cloudflare, Inc.(미국 등)로 봇 확인·메일 전달을 위해 전송됩니다. 불필요한 민감정보는 입력하지 마세요.</p><a href="privacy.html">홈페이지 개인정보처리방침</a></div><div class="contact-fallback" id="contact-fallback" hidden><p>현재 온라인 양식은 준비 중입니다. 이메일로 직접 문의해 주세요.</p></div><form class="contact-form" id="contact-form" hidden><div class="form-row"><label for="contact-email">이메일</label><input id="contact-email" name="email" type="email" maxlength="254" autocomplete="email" required></div><div class="form-row"><label for="contact-message">내용</label><textarea id="contact-message" name="message" maxlength="4000" aria-describedby="character-count" required></textarea><output class="character-count" id="character-count" for="contact-message">0 / 4000자</output></div><div class="honeypot" aria-hidden="true" hidden><label for="contact-website">웹사이트</label><input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off"></div><input id="contact-started-at" name="startedAt" type="hidden"><div class="cf-turnstile" data-sitekey="0x4AAAAAAFsvfCbrajidkTlI"></div><div class="consent-row"><input id="contact-consent" type="checkbox" required><label for="contact-consent">개인정보 수집·이용 및 국외 이전(Cloudflare)에 동의합니다. (필수)</label></div><button class="button primary" id="contact-submit" type="submit">문의 보내기</button><p class="form-status" id="form-status" role="status" aria-live="polite"></p><p class="fallback-mail" id="form-fallback" hidden>전송이 어렵다면 <a href="mailto:2min@1min.dev">이메일로 문의해 주세요</a>.</p></form></div></div></div></section>
 </main>
 <footer><div class="wrap"><ul><li><a href="privacy.html">홈페이지 개인정보처리방침</a></li><li><a href="#en">English introduction</a></li><li><a href="https://iris-lizard-031.notion.site/0-3fe266b5e4618014abb1e118430018f3" target="_blank" rel="noopener noreferrer">0개국어 개인정보처리방침</a></li><li><a href="https://iris-lizard-031.notion.site/0-3ff266b5e46180af9f7feb9971331e49" target="_blank" rel="noopener noreferrer">0개국어 계정·데이터 삭제 안내</a></li><li><a href="newbie-helper/privacy.html">신입 이사원 개인정보처리방침</a></li><li><a href="newbie-helper/account-deletion.html">신입 이사원 계정 삭제 안내</a></li></ul><p>Pretendard 400·600 자체 호스팅 · <a href="https://github.com/orioncactus/pretendard" target="_blank" rel="noopener noreferrer">SIL Open Font License 1.1, Kil Hyung-jin / orioncactus</a></p><p>0개국어 표제 글꼴: 광양시 광양감동체 (공공누리 제1유형)</p><div id="en" lang="en"><p><strong>Lee Min-hyung</strong> builds useful web and mobile products from everyday work problems. He creates well suited services, grows through experience, and considers what people need when things are inconvenient. He founded 1min in Naju, South Korea, in October 2026. Zerolingual is available on Google Play and Apps-in-Toss; Idigdi is a public travel recommendation service.</p><p>Inquiries: <a href="mailto:2min@1min.dev">2min@1min.dev</a></p></div><p>© 2026 일민형 (1min)</p></div></footer>
+<dialog class="lightbox" id="lightbox" aria-label="이미지 크게 보기"><div class="lightbox-panel"><div class="lightbox-head"><p class="lightbox-count" id="lightbox-count" aria-live="polite"></p><button class="button lightbox-close" id="lightbox-close" type="button" aria-label="닫기">닫기</button></div><div class="lightbox-body" id="lightbox-stage"><button class="button lightbox-nav" id="lightbox-prev" type="button" aria-label="이전 이미지">이전</button><img class="lightbox-image" id="lightbox-image" src="assets/today.webp" alt="" width="540" height="960" draggable="false"><button class="button lightbox-nav" id="lightbox-next" type="button" aria-label="다음 이미지">다음</button></div><p class="lightbox-caption" id="lightbox-caption"></p></div></dialog>
 <script>
+const lightbox=document.getElementById('lightbox');
+const lightboxStage=document.getElementById('lightbox-stage');
+const lightboxImage=document.getElementById('lightbox-image');
+const lightboxCount=document.getElementById('lightbox-count');
+const lightboxCaption=document.getElementById('lightbox-caption');
+const lightboxClose=document.getElementById('lightbox-close');
+const lightboxPrev=document.getElementById('lightbox-prev');
+const lightboxNext=document.getElementById('lightbox-next');
+let currentGallery=[];
+let currentIndex=0;
+let lastTrigger=null;
+let pointerStart=null;
+let justSwiped=false;
+function renderLightbox(){
+  const item=currentGallery[currentIndex];
+  if(!item)return;
+  lightboxImage.src=item.src;
+  lightboxImage.alt=item.alt;
+  if(item.width)lightboxImage.width=item.width;
+  if(item.height)lightboxImage.height=item.height;
+  lightboxCount.textContent=`${currentIndex+1} / ${currentGallery.length}`;
+  lightboxCaption.textContent=item.caption;
+  const single=currentGallery.length<=1;
+  lightboxPrev.hidden=single;
+  lightboxNext.hidden=single;
+  lightboxStage.classList.toggle('single',single);
+}
+function openLightbox(items,index,trigger){
+  currentGallery=items;
+  currentIndex=index;
+  lastTrigger=trigger;
+  renderLightbox();
+  document.body.classList.add('lightbox-open');
+  if(!lightbox.open)lightbox.showModal();
+  lightboxClose.focus();
+}
+function restoreLightboxState(){
+  document.body.classList.remove('lightbox-open');
+  const trigger=lastTrigger;
+  lastTrigger=null;
+  if(trigger)trigger.focus();
+}
+function closeLightbox(){
+  if(lightbox.open)lightbox.close();
+  restoreLightboxState();
+}
+function stepLightbox(delta){
+  if(currentGallery.length<=1)return;
+  currentIndex=(currentIndex+delta+currentGallery.length)%currentGallery.length;
+  renderLightbox();
+}
+document.querySelectorAll('.gallery').forEach(gallery=>{
+  const items=[];
+  gallery.querySelectorAll('figure').forEach(fig=>{
+    const button=fig.querySelector('button.gallery-item');
+    const img=fig.querySelector('img');
+    if(!button||!img)return;
+    const index=items.length;
+    items.push({
+      src:img.getAttribute('src')||img.src,
+      alt:img.alt||'',
+      width:Number(img.getAttribute('width'))||0,
+      height:Number(img.getAttribute('height'))||0,
+      caption:fig.querySelector('figcaption')?.textContent.trim()||img.alt||''
+    });
+    button.addEventListener('click',()=>openLightbox(items,index,button));
+  });
+});
+lightboxClose.addEventListener('click',closeLightbox);
+lightboxPrev.addEventListener('click',()=>stepLightbox(-1));
+lightboxNext.addEventListener('click',()=>stepLightbox(1));
+lightbox.addEventListener('cancel',event=>{event.preventDefault();closeLightbox()});
+lightbox.addEventListener('close',restoreLightboxState);
+lightbox.addEventListener('click',event=>{
+  if(justSwiped){justSwiped=false;return}
+  if(event.target===lightbox)closeLightbox();
+});
+document.addEventListener('keydown',event=>{
+  if(!lightbox.open)return;
+  if(event.key==='ArrowLeft'){event.preventDefault();stepLightbox(-1)}
+  else if(event.key==='ArrowRight'){event.preventDefault();stepLightbox(1)}
+});
+lightboxStage.addEventListener('pointerdown',event=>{
+  if(currentGallery.length<=1)return;
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  pointerStart={id:event.pointerId,x:event.clientX,y:event.clientY};
+});
+lightboxStage.addEventListener('pointerup',event=>{
+  if(!pointerStart||event.pointerId!==pointerStart.id)return;
+  const dx=event.clientX-pointerStart.x;
+  const dy=event.clientY-pointerStart.y;
+  pointerStart=null;
+  if(Math.abs(dx)>=40&&Math.abs(dx)>Math.abs(dy)){
+    justSwiped=true;
+    stepLightbox(dx<0?1:-1);
+    setTimeout(()=>{justSwiped=false},0);
+  }
+});
+lightboxStage.addEventListener('pointercancel',()=>{pointerStart=null});
 const copyStatus=document.getElementById('copy-status');
 async function copyEmail(){try{await navigator.clipboard.writeText('2min@1min.dev');copyStatus.textContent='이메일 주소를 복사했습니다.'}catch{copyStatus.textContent='복사하지 못했습니다. 위 이메일 주소를 선택해 복사해 주세요.'}}
 document.getElementById('copy-email').addEventListener('click',copyEmail);

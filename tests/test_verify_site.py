@@ -27,10 +27,11 @@ VALID_LANDING = """
 <a href="#featured-works">대표 작업 보기</a><a href="#contact">문의하기</a>
 <aside><a href="#work-zerolingual">0개국어</a><a href="#work-newbie">신입 이사원<span>출시 준비 중</span></a></aside>
 </section>
-<section id="featured-works"><article id="work-zerolingual"></article>
-<article id="work-newbie">출시 준비 중</article></section>
-<section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.1min.dev">서비스 방문하기</a><img src="assets/idigdi-main.webp"></article>
-<ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong>내일이음</strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
+<section id="featured-works"><article id="work-zerolingual"><img class="work-icon" src="assets/symbol-color.svg" alt="0개국어 앱 심볼"><div class="gallery app-gallery"><figure><button class="gallery-item" type="button" aria-label="0개국어 오늘의 단어 학습 화면 크게 보기"><img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면"></button><figcaption>오늘의 단어</figcaption></figure></div></article>
+<article id="work-newbie">출시 준비 중<div class="gallery newbie-gallery"><figure><button class="gallery-item" type="button" aria-label="신입 이사원 홈 대시보드 예시 화면 크게 보기"><img src="assets/newbie-home.webp" alt="신입 이사원 홈 대시보드 예시 화면"></button><figcaption>홈 대시보드</figcaption></figure></div></article></section>
+<section id="other-projects"><article id="work-idigdi"><a href="https://bw-jeju.1min.dev">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="이디그디 사진 업로드와 조건 선택 화면 크게 보기"><img src="assets/idigdi-main.webp" alt="이디그디 사진 업로드와 조건 선택 화면"></button></figure></div></article>
+<article id="work-naeil"><h3>내일이음</h3><p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a><div class="gallery other-gallery"><figure><button class="gallery-item" type="button" aria-label="내일이음 첫 화면 크게 보기"><img src="assets/naeil-home.webp" alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"></button></figure></div></article>
+<ol class="contest-list" aria-label="그 밖의 개발 서비스 목록"><li><strong>이디그디</strong> — 여행 이미지와 닮은 제주 관광지·코스를 제안하는 웹앱</li><li><strong>검진AI 리셋코치</strong> — 검진 수치와 생활패턴을 바탕으로 위험도를 살피고 개선 행동을 제안하는 웹앱</li><li><strong><a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">내일이음</a></strong> — 경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱</li><li><strong>들마루</strong> — 지원사업과 재배 일정, 병해충 정보를 연결하는 청년농 웹 서비스</li></ol></section>
 <section id="experience"><article><span class="period">2026</span><div><h3>공공데이터·AI 활용 공모전 출품</h3><p>이디그디(관광데이터 활용 공모전), 내일이음(고용24 AI 고용서비스 해커톤), 들마루(농업·농촌 공공데이터+AI 활용 창업경진대회) 외 서비스 개발</p></div></article></section>
 <section id="company">
 <p>업무의 불편을 쓰이는 웹과 앱으로 만드는 개발자, 이민형.</p>
@@ -55,6 +56,7 @@ VALID_LANDING = """
 </form>
 </section>
 <footer><a href="privacy.html">개인정보처리방침</a><div id="en"></div><a href="#en">English</a></footer>
+<dialog id="lightbox"><p id="lightbox-count"></p><button id="lightbox-close" type="button">닫기</button><button id="lightbox-prev" type="button">이전</button><img id="lightbox-image" src="assets/today.webp" alt=""><button id="lightbox-next" type="button">다음</button><p id="lightbox-caption"></p></dialog>
 <a href="https://play.google.com/store/apps/details?id=com.scnulmh.zerolingual">Play</a>
 <a href="intoss://zerolanguage">Toss</a>
 <a href="https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb">Newbie</a>
@@ -315,6 +317,67 @@ class TestRedesignMarkup(unittest.TestCase):
             "https://cdn.jsdelivr.net/npm/library.js",
         ):
             self.assertFalse(is_allowed_external_request(rejected, base_url), msg=rejected)
+
+    def test_naeil_block_and_single_capture(self):
+        start = VALID_LANDING.index('<article id="work-naeil">')
+        end = VALID_LANDING.index("</article>", start) + len("</article>")
+        naeil_block = VALID_LANDING[start:end]
+
+        missing_naeil = VALID_LANDING.replace(naeil_block, "")
+        missing_errors = validate_redesign_markup(missing_naeil)
+        self.assertTrue(any("work-naeil" in error for error in missing_errors))
+        self.assertTrue(any("내일이음 블록" in error for error in missing_errors))
+
+        before_idigdi = VALID_LANDING.replace(naeil_block, "").replace(
+            '<article id="work-idigdi">', naeil_block + '<article id="work-idigdi">'
+        )
+        self.assertTrue(any("내일이음 블록" in error for error in validate_redesign_markup(before_idigdi)))
+
+        after_list = VALID_LANDING.replace(naeil_block, "").replace("</ol>", "</ol>" + naeil_block)
+        self.assertTrue(any("내일이음 블록" in error for error in validate_redesign_markup(after_list)))
+
+        missing_rel = VALID_LANDING.replace(
+            '<a href="https://bw-tomorrow.1min.dev" target="_blank" rel="noopener noreferrer">서비스 방문하기</a>',
+            '<a href="https://bw-tomorrow.1min.dev" target="_blank">서비스 방문하기</a>',
+        )
+        self.assertTrue(any("내일이음 서비스 링크" in error for error in validate_redesign_markup(missing_rel)))
+
+        missing_desc = VALID_LANDING.replace(
+            "<p>경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱.</p>",
+            "<p>짧은 소개</p>",
+        )
+        self.assertTrue(any("내일이음 제목 또는 설명" in error for error in validate_redesign_markup(missing_desc)))
+
+        extra_capture = VALID_LANDING.replace(
+            'alt="내일이음 첫 화면" width="1280" height="800" loading="lazy">',
+            'alt="내일이음 첫 화면" width="1280" height="800" loading="lazy"><img src="assets/naeil-home.webp" alt="추가">',
+        )
+        self.assertTrue(any("내일이음 캡처 1장 초과" in error for error in validate_redesign_markup(extra_capture)))
+
+        bad_alt = VALID_LANDING.replace('alt="내일이음 첫 화면"', 'alt="내일이음 화면"')
+        self.assertTrue(any("내일이음 캡처 속성" in error for error in validate_redesign_markup(bad_alt)))
+
+    def test_gallery_keyboard_triggers_and_lightbox_dialog(self):
+        unwrapped_img = VALID_LANDING.replace(
+            '<button class="gallery-item" type="button" aria-label="0개국어 오늘의 단어 학습 화면 크게 보기">'
+            '<img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면"></button>',
+            '<img src="assets/today.webp" alt="0개국어 오늘의 단어 학습 화면">',
+        )
+        self.assertTrue(any("갤러리 이미지 키보드 열기 버튼" in error for error in validate_redesign_markup(unwrapped_img)))
+
+        bad_aria = VALID_LANDING.replace(
+            'aria-label="내일이음 첫 화면 크게 보기"',
+            'aria-label="내일이음 첫 화면"',
+        )
+        self.assertTrue(any("갤러리 이미지 키보드 열기 버튼" in error for error in validate_redesign_markup(bad_aria)))
+
+        missing_dialog = VALID_LANDING.replace('<dialog id="lightbox">', '<div id="lightbox">').replace(
+            "</dialog>", "</div>"
+        )
+        self.assertTrue(any("라이트박스 dialog" in error for error in validate_redesign_markup(missing_dialog)))
+
+        missing_close = VALID_LANDING.replace('id="lightbox-close"', 'id="wrong-close"')
+        self.assertTrue(any("라이트박스 dialog" in error for error in validate_redesign_markup(missing_close)))
 
 
 class TestTeeLogger(unittest.TestCase):

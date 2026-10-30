@@ -206,7 +206,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         errors.append(f"섹션 순서: {parser.sections}")
 
     ids = [value for _, value in parser.ids]
-    for required in ("work-zerolingual", "work-newbie", "work-idigdi", "en"):
+    for required in ("work-zerolingual", "work-newbie", "work-idigdi", "work-naeil", "en"):
         if required not in ids:
             errors.append(f"앵커 누락: {required}")
 
@@ -256,11 +256,24 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         other_html,
         re.S | re.I,
     )
+    naeil_in_other = re.search(
+        r'<article\b[^>]*\bid=["\']work-naeil["\'][^>]*>.*?</article>',
+        other_html,
+        re.S | re.I,
+    )
     contest_list = re.search(
         r'(<ol\b[^>]*\bclass=["\'][^"\']*\bcontest-list\b[^"\']*["\'][^>]*>)(.*?)</ol>',
         other_html,
         re.S | re.I,
     )
+    if (
+        "work-naeil" in featured_html
+        or not naeil_in_other
+        or not idigdi_in_other
+        or idigdi_in_other.end() > naeil_in_other.start()
+        or (contest_list and naeil_in_other.end() > contest_list.start())
+    ):
+        errors.append("내일이음 블록 누락 또는 배치 오류")
     if (
         not contest_list
         or len(all_contest_lists) != 1
@@ -354,6 +367,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         and "신입 이사원" in hero_html
         and "출시 준비 중" in hero_html
         and "work-idigdi" not in hero_html
+        and "work-naeil" not in hero_html
     ):
         errors.append("히어로 우측 미리보기 구성 오류")
 
@@ -376,6 +390,7 @@ def validate_redesign_markup(html_content: str) -> list[str]:
         "intoss://zerolanguage",
         "https://app.notion.com/p/Newbie-Helper-401266b5e461803ebdeee369e3ef90eb",
         "https://bw-jeju.1min.dev",
+        "https://bw-tomorrow.1min.dev",
         "mailto:2min@1min.dev",
         "#en",
         "privacy.html",
@@ -387,10 +402,93 @@ def validate_redesign_markup(html_content: str) -> list[str]:
 
     idigdi_article = re.search(r'<article\b[^>]*\bid=["\']work-idigdi["\'][^>]*>(.*?)</article>', html_content, re.S | re.I)
     idigdi_html = idigdi_article.group(1) if idigdi_article else ""
-    if len(re.findall(r"<img\b", idigdi_html, re.I)) > 1:
+    idigdi_img_count = len(re.findall(r"<img\b", idigdi_html, re.I))
+    if idigdi_img_count == 0:
+        errors.append("이디그디 캡처 누락")
+    elif idigdi_img_count > 1:
         errors.append("이디그디 캡처 1장 초과")
     if not re.search(r'<a\b[^>]*href=["\']https://bw-jeju\.1min\.dev["\'][^>]*>\s*서비스 방문하기\s*</a>', idigdi_html):
         errors.append("이디그디 서비스 링크 누락")
+
+    naeil_article = re.search(r'<article\b[^>]*\bid=["\']work-naeil["\'][^>]*>(.*?)</article>', html_content, re.S | re.I)
+    naeil_html = naeil_article.group(1) if naeil_article else ""
+    naeil_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", naeil_html)).strip()
+    if not (
+        re.search(r"<h3\b[^>]*>\s*내일이음\s*</h3>", naeil_html)
+        and "경험을 직업·훈련·채용 기회와 다음 행동으로 잇는 AI 고용서비스 웹앱" in naeil_text
+    ):
+        errors.append("내일이음 제목 또는 설명 누락")
+    naeil_link = re.search(
+        r'<a\b(?=[^>]*\bhref=["\']https://bw-tomorrow\.1min\.dev["\'])(?=[^>]*\btarget=["\']_blank["\'])([^>]*)>\s*서비스 방문하기\s*</a>',
+        naeil_html,
+        re.I,
+    )
+    naeil_rel = re.search(r'\brel=["\']([^"\']*)["\']', naeil_link.group(1), re.I) if naeil_link else None
+    naeil_rel_tokens = set(naeil_rel.group(1).lower().split()) if naeil_rel else set()
+    if not naeil_link or not {"noopener", "noreferrer"}.issubset(naeil_rel_tokens):
+        errors.append("내일이음 서비스 링크 또는 새 탭 보안 속성 누락")
+    naeil_imgs = re.findall(r"<img\b[^>]*>", naeil_html, re.I)
+    if len(naeil_imgs) == 0:
+        errors.append("내일이음 캡처 누락")
+    elif len(naeil_imgs) > 1:
+        errors.append("내일이음 캡처 1장 초과")
+    else:
+        naeil_img = naeil_imgs[0]
+        if not (
+            re.search(r'\bsrc=["\']assets/naeil-home\.webp["\']', naeil_img)
+            and re.search(r'\balt=["\']내일이음 첫 화면["\']', naeil_img)
+            and re.search(r'\bwidth=["\']1280["\']', naeil_img)
+            and re.search(r'\bheight=["\']800["\']', naeil_img)
+            and re.search(r'\bloading=["\']lazy["\']', naeil_img)
+        ):
+            errors.append("내일이음 캡처 속성(src·alt·width·height·loading) 오류")
+
+    galleries = re.findall(
+        r'<div\b[^>]*\bclass=["\'][^"\']*\bgallery\b[^"\']*["\'][^>]*>(.*?)</div>',
+        html_content,
+        re.S | re.I,
+    )
+    total_gallery_imgs = sum(len(re.findall(r"<img\b", g, re.I)) for g in galleries)
+    wrapped_gallery_imgs = sum(
+        len(
+            re.findall(
+                r'<button\b(?=[^>]*\btype=["\']button["\'])(?=[^>]*\baria-label=["\'][^"\']*크게 보기["\'])[^>]*>\s*<img\b[^>]*>\s*</button>',
+                g,
+                re.S | re.I,
+            )
+        )
+        for g in galleries
+    )
+    work_capture_imgs = [
+        tag
+        for tag in re.findall(r"<img\b[^>]*>", featured_html + other_html, re.I)
+        if not re.search(r'\bclass=["\'][^"\']*\bwork-icon\b', tag, re.I)
+    ]
+    if (
+        not galleries
+        or total_gallery_imgs == 0
+        or wrapped_gallery_imgs != total_gallery_imgs
+        or len(work_capture_imgs) != total_gallery_imgs
+    ):
+        errors.append("갤러리 이미지 키보드 열기 버튼(type=button, aria-label) 누락")
+
+    lightbox_match = re.search(
+        r'<dialog\b[^>]*\bid=["\']lightbox["\'][^>]*>(.*?)</dialog>',
+        html_content,
+        re.S | re.I,
+    )
+    lightbox_inner = lightbox_match.group(1) if lightbox_match else ""
+    if not (
+        lightbox_match
+        and re.search(r'<button\b(?=[^>]*\bid=["\']lightbox-close["\'])(?=[^>]*\btype=["\']button["\'])[^>]*>', lightbox_inner, re.I)
+        and re.search(r'<button\b(?=[^>]*\bid=["\']lightbox-prev["\'])(?=[^>]*\btype=["\']button["\'])[^>]*>', lightbox_inner, re.I)
+        and re.search(r'<button\b(?=[^>]*\bid=["\']lightbox-next["\'])(?=[^>]*\btype=["\']button["\'])[^>]*>', lightbox_inner, re.I)
+        and re.search(r'<img\b[^>]*\bid=["\']lightbox-image["\'][^>]*>', lightbox_inner, re.I)
+        and re.search(r'\bid=["\']lightbox-count["\']', lightbox_inner, re.I)
+        and re.search(r'\bid=["\']lightbox-caption["\']', lightbox_inner, re.I)
+    ):
+        errors.append("라이트박스 dialog 또는 내부 제어 요소 누락")
+
     if "AWS EC2" in html_content or "HTTPS" in html_content:
         errors.append("운영 세부 표현 잔존")
 
@@ -778,6 +876,30 @@ def run_static_checks() -> tuple[int, int]:
         failed += 1
     else:
         print("✅ [통과] 신규 WebP 캡처 규격 만족 (긴 변 <= 1200, 크기 <= 300KB)")
+        passed += 1
+
+    naeil_shot = WORKSPACE_DIR / "assets/naeil-home.webp"
+    naeil_shot_errors = []
+    if not naeil_shot.is_file():
+        naeil_shot_errors.append("assets/naeil-home.webp 파일 누락")
+    else:
+        naeil_bytes = os.path.getsize(naeil_shot)
+        if naeil_bytes > 300000:
+            naeil_shot_errors.append(f"assets/naeil-home.webp 크기 초과 ({naeil_bytes} > 300,000 bytes)")
+        try:
+            with Image.open(naeil_shot) as img:
+                if img.format != "WEBP":
+                    naeil_shot_errors.append(f"assets/naeil-home.webp 포맷 오류 ({img.format})")
+                if img.size != (1280, 800):
+                    naeil_shot_errors.append(f"assets/naeil-home.webp 해상도 불일치 ({img.size} != (1280, 800))")
+        except Exception as e:
+            naeil_shot_errors.append(f"assets/naeil-home.webp 이미지 로드 실패: {e}")
+
+    if naeil_shot_errors:
+        print(f"❌ [실패] 내일이음 캡처 규격 위반: {naeil_shot_errors}")
+        failed += 1
+    else:
+        print("✅ [통과] 내일이음 WebP 캡처 규격 만족 (1280×800, 크기 <= 300KB)")
         passed += 1
 
     # 9. 글꼴 파일 및 문서 보관 검사
@@ -1258,6 +1380,184 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         )
                         failed += 1
 
+                    # (a), (c) 갤러리 키보드 열기 수단 및 #work-naeil 블록·링크·이미지 검증
+                    gallery_naeil_state = page.evaluate("""(() => {
+                        const galleryImgs = [...document.querySelectorAll('.gallery figure img')];
+                        const allWrapped = galleryImgs.length === 7 && galleryImgs.every(img => {
+                            const btn = img.closest('button[type="button"]');
+                            if (!btn) return false;
+                            const label = btn.getAttribute('aria-label') || '';
+                            const r = btn.getBoundingClientRect();
+                            return label.includes('크게 보기') && r.width >= 44 && r.height >= 44;
+                        });
+                        const idigdi = document.getElementById('work-idigdi');
+                        const naeil = document.getElementById('work-naeil');
+                        const contestList = document.querySelector('#other-projects ol.contest-list');
+                        const naeilLink = naeil ? naeil.querySelector('a[href="https://bw-tomorrow.1min.dev"]') : null;
+                        const naeilImgs = naeil ? [...naeil.querySelectorAll('img')] : [];
+                        const naeilImg = naeilImgs[0] || null;
+                        const orderOk = Boolean(
+                            idigdi && naeil && contestList &&
+                            (idigdi.compareDocumentPosition(naeil) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+                            (naeil.compareDocumentPosition(contestList) & Node.DOCUMENT_POSITION_FOLLOWING)
+                        );
+                        return {
+                            galleryCount: galleryImgs.length,
+                            allWrapped,
+                            orderOk,
+                            naeilTitle: naeil ? (naeil.querySelector('h3')?.textContent.trim() || '') : '',
+                            naeilImgCount: naeilImgs.length,
+                            naeilLinkOk: Boolean(
+                                naeilLink &&
+                                naeilLink.target === '_blank' &&
+                                naeilLink.rel.includes('noopener') &&
+                                naeilLink.rel.includes('noreferrer') &&
+                                naeilLink.textContent.trim() === '서비스 방문하기'
+                            ),
+                            naeilImgOk: Boolean(
+                                naeilImg &&
+                                naeilImg.getAttribute('src') === 'assets/naeil-home.webp' &&
+                                naeilImg.alt === '내일이음 첫 화면' &&
+                                naeilImg.complete &&
+                                naeilImg.naturalWidth === 1280 &&
+                                naeilImg.naturalHeight === 800
+                            ),
+                        };
+                    })()""")
+                    if (
+                        gallery_naeil_state["allWrapped"]
+                        and gallery_naeil_state["orderOk"]
+                        and gallery_naeil_state["naeilTitle"] == "내일이음"
+                        and gallery_naeil_state["naeilImgCount"] == 1
+                        and gallery_naeil_state["naeilLinkOk"]
+                        and gallery_naeil_state["naeilImgOk"]
+                    ):
+                        print("✅ [통과] 전체 갤러리 키보드 열기 버튼(7장) 및 내일이음(#work-naeil) 블록·링크·이미지 확인")
+                        passed += 1
+                    else:
+                        print(f"❌ [실패] 갤러리 키보드 버튼 또는 내일이음 블록 오류: {gallery_naeil_state}")
+                        failed += 1
+
+                    # (b) 라이트박스 dialog 열기(키보드·클릭), → 전환, 스와이프, Esc·배경 닫기, 포커스 복귀, 1장 갤러리 버튼 숨김 검증
+                    first_gallery_btn = page.locator("#work-zerolingual .gallery button.gallery-item").first
+                    first_gallery_btn.focus()
+                    page.keyboard.press("Enter")
+                    page.wait_for_timeout(240)
+                    kb_open_state = page.evaluate("""(() => {
+                        const dlg = document.getElementById('lightbox');
+                        return {
+                            open: Boolean(dlg && dlg.open),
+                            activeId: document.activeElement ? document.activeElement.id : '',
+                            bodyOverflow: getComputedStyle(document.body).overflow,
+                        };
+                    })()""")
+                    page.keyboard.press("Escape")
+                    kb_close_returned = page.evaluate(
+                        "() => !document.getElementById('lightbox').open && "
+                        "getComputedStyle(document.body).overflow !== 'hidden' && "
+                        "document.activeElement === document.querySelector('#work-zerolingual .gallery button.gallery-item')"
+                    )
+
+                    first_gallery_btn.click()
+                    page.wait_for_timeout(240)
+                    step1 = page.evaluate("""(() => {
+                        const dlg = document.getElementById('lightbox');
+                        const img = document.getElementById('lightbox-image');
+                        const prev = document.getElementById('lightbox-prev');
+                        const next = document.getElementById('lightbox-next');
+                        return {
+                            open: Boolean(dlg && dlg.open),
+                            activeId: document.activeElement ? document.activeElement.id : '',
+                            bodyOverflow: getComputedStyle(document.body).overflow,
+                            src: img ? img.getAttribute('src') : '',
+                            count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                            caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                            navVisible: Boolean(prev && !prev.hidden && next && !next.hidden && prev.getClientRects().length > 0 && next.getClientRects().length > 0),
+                        };
+                    })()""")
+                    page.keyboard.press("ArrowRight")
+                    step2 = page.evaluate("""(() => ({
+                        src: document.getElementById('lightbox-image')?.getAttribute('src') || '',
+                        count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                        caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                    }))()""")
+                    page.evaluate("""(() => {
+                        const stage = document.getElementById('lightbox-stage');
+                        stage.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, pointerType: 'touch', clientX: 320, clientY: 300 }));
+                        stage.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, pointerType: 'touch', clientX: 200, clientY: 305 }));
+                    })()""")
+                    step3 = page.evaluate("""(() => ({
+                        src: document.getElementById('lightbox-image')?.getAttribute('src') || '',
+                        count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                        caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                    }))()""")
+                    page.keyboard.press("Escape")
+                    after_esc = page.evaluate("""(() => ({
+                        open: Boolean(document.getElementById('lightbox')?.open),
+                        bodyOverflow: getComputedStyle(document.body).overflow,
+                        focusReturned: document.activeElement === document.querySelector('#work-zerolingual .gallery button.gallery-item'),
+                    }))()""")
+
+                    naeil_btn = page.locator("#work-naeil .gallery button.gallery-item").first
+                    naeil_btn.click()
+                    page.wait_for_timeout(240)
+                    single_state = page.evaluate("""(() => {
+                        const dlg = document.getElementById('lightbox');
+                        const prev = document.getElementById('lightbox-prev');
+                        const next = document.getElementById('lightbox-next');
+                        return {
+                            open: Boolean(dlg && dlg.open),
+                            src: document.getElementById('lightbox-image')?.getAttribute('src') || '',
+                            count: document.getElementById('lightbox-count')?.textContent.trim() || '',
+                            caption: document.getElementById('lightbox-caption')?.textContent.trim() || '',
+                            navHidden: Boolean(prev && prev.hidden && prev.getClientRects().length === 0 && next && next.hidden && next.getClientRects().length === 0),
+                        };
+                    })()""")
+                    page.mouse.click(5, 5)
+                    after_backdrop = page.evaluate("""(() => ({
+                        open: Boolean(document.getElementById('lightbox')?.open),
+                        focusReturned: document.activeElement === document.querySelector('#work-naeil .gallery button.gallery-item'),
+                    }))()""")
+
+                    if (
+                        kb_open_state["open"]
+                        and kb_open_state["activeId"] == "lightbox-close"
+                        and kb_open_state["bodyOverflow"] == "hidden"
+                        and kb_close_returned
+                        and step1["open"]
+                        and step1["activeId"] == "lightbox-close"
+                        and step1["bodyOverflow"] == "hidden"
+                        and step1["src"] == "assets/today.webp"
+                        and step1["count"] == "1 / 3"
+                        and step1["caption"] == "오늘의 단어"
+                        and step1["navVisible"]
+                        and step2["src"] == "assets/card.webp"
+                        and step2["count"] == "2 / 3"
+                        and step2["caption"] == "어휘 카드"
+                        and step3["src"] == "assets/quiz.webp"
+                        and step3["count"] == "3 / 3"
+                        and step3["caption"] == "복습 퀴즈"
+                        and not after_esc["open"]
+                        and after_esc["bodyOverflow"] != "hidden"
+                        and after_esc["focusReturned"]
+                        and single_state["open"]
+                        and single_state["src"] == "assets/naeil-home.webp"
+                        and single_state["count"] == "1 / 1"
+                        and single_state["caption"] == "내일이음 첫 화면"
+                        and single_state["navHidden"]
+                        and not after_backdrop["open"]
+                        and after_backdrop["focusReturned"]
+                    ):
+                        print("✅ [통과] 라이트박스 dialog 열기·→/스와이프 전환·Esc/배경 닫기·포커스 복귀·1장 버튼 숨김 확인")
+                        passed += 1
+                    else:
+                        print(
+                            f"❌ [실패] 라이트박스 동작 오류: kb={kb_open_state}/{kb_close_returned}, "
+                            f"step1={step1}, step2={step2}, step3={step3}, esc={after_esc}, "
+                            f"single={single_state}, backdrop={after_backdrop}"
+                        )
+                        failed += 1
+
                     page.mouse.move(0, 0)
 
                 if tc["width"] in (1280, 390):
@@ -1328,6 +1628,77 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                         print(f"✅ [통과] [{tc['name']}] 링크·버튼 44×44px 이상")
                         passed += 1
 
+                # (d) 열린 dialog 상태에서의 터치 영역 44×44px·대비 4.5:1·모션 감소 검증
+                if tc["width"] in (1280, 390):
+                    page.locator("#work-zerolingual .gallery button.gallery-item").first.click()
+                    page.mouse.move(0, 0)
+                    page.wait_for_timeout(240)
+                    dialog_a11y = page.evaluate("""(() => {
+                        const dlg = document.getElementById('lightbox');
+                        if (!dlg || !dlg.open) return { open: false, smallButtons: ['dialog-not-open'], contrastIssues: ['dialog-not-open'] };
+                        const parse = value => {
+                            const m = value.match(/[\\d.]+/g);
+                            return m ? m.slice(0, 4).map(Number) : null;
+                        };
+                        const luminance = rgb => {
+                            const c = rgb.slice(0, 3).map(v => {
+                                v /= 255;
+                                return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+                            });
+                            return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+                        };
+                        const visibleBtns = [...dlg.querySelectorAll('button')].filter(
+                            el => !el.hidden && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'
+                        );
+                        const smallButtons = visibleBtns
+                            .map(el => ({ id: el.id || el.tagName, width: el.getBoundingClientRect().width, height: el.getBoundingClientRect().height }))
+                            .filter(b => b.width < 44 || b.height < 44);
+                        const contrastIssues = [];
+                        for (const el of dlg.querySelectorAll('p, button, span, strong')) {
+                            if (!el.textContent.trim() || !el.getClientRects().length) continue;
+                            const fg = parse(getComputedStyle(el).color);
+                            let bg = null;
+                            for (let node = el; node && !bg; node = node.parentElement) {
+                                const c = parse(getComputedStyle(node).backgroundColor);
+                                if (c && (c.length < 4 || c[3] >= .99)) bg = c;
+                            }
+                            if (!bg) bg = parse(getComputedStyle(document.body).backgroundColor);
+                            if (!fg || !bg) continue;
+                            const a = luminance(fg), b = luminance(bg);
+                            const ratio = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+                            if (ratio < 4.5) contrastIssues.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}: ${ratio.toFixed(2)}`);
+                        }
+                        return { open: true, buttonCount: visibleBtns.length, smallButtons, contrastIssues };
+                    })()""")
+                    page.emulate_media(reduced_motion="reduce")
+                    dialog_reduced = page.evaluate("""(() => {
+                        const panel = document.querySelector('#lightbox .lightbox-panel');
+                        if (!panel) return false;
+                        const s = getComputedStyle(panel);
+                        return s.animationName === 'none' || parseFloat(s.animationDuration) <= .001;
+                    })()""")
+                    page.emulate_media(reduced_motion="no-preference")
+                    page.click("#lightbox-close")
+                    page.mouse.move(0, 0)
+                    dialog_closed_ok = page.evaluate("() => !document.getElementById('lightbox').open")
+
+                    if (
+                        dialog_a11y["open"]
+                        and dialog_a11y["buttonCount"] == 3
+                        and not dialog_a11y["smallButtons"]
+                        and not dialog_a11y["contrastIssues"]
+                        and dialog_reduced
+                        and dialog_closed_ok
+                    ):
+                        print(f"✅ [통과] [{tc['name']}] 열린 dialog 버튼 44×44px 이상·대비 4.5:1 이상·모션 감소·닫기 버튼 확인")
+                        passed += 1
+                    else:
+                        print(
+                            f"❌ [실패] [{tc['name']}] 열린 dialog 접근성/대비/크기 오류: "
+                            f"a11y={dialog_a11y}, reduced={dialog_reduced}, closed={dialog_closed_ok}"
+                        )
+                        failed += 1
+
                 # [REWORK 1] 미리보기 캡처 직전 부드러운 스크롤 끄고 맨 위로 복귀 및 위치 안정화
                 if tc["shot"]:
                     if tc["name"] == "desktop-1280-light":
@@ -1338,8 +1709,8 @@ def run_browser_checks(preview_dir_str: str) -> tuple[int, int]:
                             if (form) form.reset();
                             if (count) count.textContent = '0 / 4000자';
                             if (status) status.textContent = '';
-                            if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
                         })()""")
+                    page.evaluate("if (document.activeElement && document.activeElement.blur) document.activeElement.blur()")
                     page.evaluate("document.documentElement.style.scrollBehavior = 'auto'")
                     page.evaluate("window.scrollTo(0, 0)")
                     try:
